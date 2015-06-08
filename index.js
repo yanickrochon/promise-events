@@ -94,7 +94,7 @@ function addListener(type, listener) {
       // Adding the second element, need to change to array.
       existing = events[type] = [existing, listener];
     } else {
-      // If we\'ve already got an array, just append.
+      // If we've already got an array, just append.
       existing.push(listener);
     }
     // Check for listener leak
@@ -411,7 +411,7 @@ function emitNone(handler, isFn, emitter) {
     promiseList = [];
 
     for (i = 0, len = handler.length; i < len; ++i) {
-      promiseList.push(handler.call(emitter));
+      promiseList[i] = handler[i].call(emitter);
     }
   }
 
@@ -430,7 +430,7 @@ function emitOne(handler, isFn, emitter, arg) {
     promiseList = new Array(len);
 
     for (i = 0; i < len; ++i) {
-      promiseList[i] = handler.call(emitter, arg);
+      promiseList[i] = handler[i].call(emitter, arg);
     }
   }
 
@@ -449,7 +449,7 @@ function emitTwo(handler, isFn, emitter, arg1, arg2) {
     promiseList = new Array(len);
 
     for (i = 0; i < len; ++i) {
-      promiseList[i] = handler.call(emitter, arg1, arg2);
+      promiseList[i] = handler[i].call(emitter, arg1, arg2);
     }
   }
 
@@ -468,7 +468,7 @@ function emitThree(handler, isFn, emitter, arg1, arg2, arg3) {
     promiseList = new Array(len);
 
     for (i = 0; i < len; ++i) {
-      promiseList[i] = handler.call(emitter, arg1, arg2, arg3);
+      promiseList[i] = handler[i].call(emitter, arg1, arg2, arg3);
     }
   }
 
@@ -487,7 +487,7 @@ function emitMany(handler, isFn, emitter, args) {
     promiseList = new Array(len);
 
     for (i = 0; i < len; ++i) {
-      promiseList[i] = handler.apply(emitter, args);
+      promiseList[i] = handler[i].apply(emitter, args);
     }
   }
 

@@ -31,8 +31,6 @@ describe("Test Promise Events Emitter", function () {
 
     events.hasOwnProperty('_events');
     events.hasOwnProperty('_maxListeners');
-
-
   });
 
   it("should add and remove listeners", function (done) {
@@ -63,7 +61,6 @@ describe("Test Promise Events Emitter", function () {
       events._events.should.eql({});
 
     }).then(done).catch(done);
-
   });
 
   it("should emit 'newListener'", function (done) {
@@ -84,7 +81,6 @@ describe("Test Promise Events Emitter", function () {
 
       });
     }).then(done).catch(done);
-
   });
 
   it("should emit 'removeListener'", function (done) {
@@ -105,7 +101,6 @@ describe("Test Promise Events Emitter", function () {
 
       });
     }).then(done).catch(done);
-
   });
 
   it("should use domain events");
@@ -115,15 +110,192 @@ describe("Test Promise Events Emitter", function () {
 
   describe("Emitting events", function () {
 
-    it("should emit with no arguments");
+    it("should emit with no arguments", function (done) {
+      var events = new Emitter();
+      var fn = function () {
+        arguments.should.have.lengthOf(0);
+      };
 
-    it("should emit with one argument");
+      this.timeout(1000);
 
-    it("should emit with two argument");
+      events.addListener('foo', fn).then(function () {
+        return events.emit('foo').then(function (results) {
 
-    it("should emit with three argument");
+          results.should.be.an.Array.of.length(1);
+          should(results[0]).be.undefined;
 
-    it("should emit with many argument");
+        }).then(events.addListener('foo', fn)).then(function () {
+          return events.emit('foo').then(function (results) {
+
+            results.should.be.an.Array.of.length(2);
+            should(results[0]).be.undefined;
+            should(results[1]).be.undefined;
+          });
+        });
+      }).then(done).catch(done);
+    });
+
+    it("should emit with one argument", function (done) {
+      var events = new Emitter();
+      var a = 'Hello';
+      var fn = function (arg1) {
+        arguments.should.have.lengthOf(1);
+
+        arg1.should.equal(a);
+
+        return arg1;
+      };
+
+      this.timeout(1000);
+
+      events.addListener('foo', fn).then(function () {
+        return events.emit('foo', a).then(function (results) {
+
+          results.should.be.an.Array.of.length(1);
+          should(results[0]).equal(a);
+
+        }).then(events.addListener('foo', fn)).then(function () {
+          return events.emit('foo', a).then(function (results) {
+
+            results.should.be.an.Array.of.length(2);
+            should(results[0]).equal(a);
+            should(results[1]).equal(a);
+          });
+        });
+      }).then(done).catch(done);
+    });
+
+    it("should emit with two argument", function (done) {
+      var events = new Emitter();
+      var a = 'Hello';
+      var b = 'World';
+      var fn1 = function (arg1, arg2) {
+        arguments.should.have.lengthOf(2);
+
+        arg1.should.equal(a);
+        arg2.should.equal(b);
+
+        return arg1;
+      };
+      var fn2 = function (arg1, arg2) {
+        arguments.should.have.lengthOf(2);
+
+        arg1.should.equal(a);
+        arg2.should.equal(b);
+
+        return arg2;
+      };
+
+      this.timeout(1000);
+
+      events.addListener('foo', fn1).then(function () {
+        return events.emit('foo', a, b).then(function (results) {
+
+          results.should.be.an.Array.of.length(1);
+          should(results[0]).equal(a);
+
+        }).then(events.addListener('foo', fn2)).then(function () {
+          return events.emit('foo', a, b).then(function (results) {
+
+            results.should.be.an.Array.of.length(2);
+            should(results[0]).equal(a);
+            should(results[1]).equal(b);
+          });
+        });
+      }).then(done).catch(done);
+    });
+
+    it("should emit with three argument", function (done) {
+      var events = new Emitter();
+      var a = 'Hello';
+      var b = 'World';
+      var c = '!!';
+      var fn1 = function (arg1, arg2, arg3) {
+        arguments.should.have.lengthOf(3);
+
+        arg1.should.equal(a);
+        arg2.should.equal(b);
+        arg3.should.equal(c);
+
+        return arg1;
+      };
+      var fn2 = function (arg1, arg2, arg3) {
+        arguments.should.have.lengthOf(3);
+
+        arg1.should.equal(a);
+        arg2.should.equal(b);
+        arg3.should.equal(c);
+
+        return arg2;
+      };
+      var fn3 = function (arg1, arg2, arg3) {
+        arguments.should.have.lengthOf(3);
+
+        arg1.should.equal(a);
+        arg2.should.equal(b);
+        arg3.should.equal(c);
+
+        return arg3;
+      };
+
+      this.timeout(1000);
+
+      events.addListener('foo', fn1).then(function () {
+        return events.emit('foo', a, b, c).then(function (results) {
+
+          results.should.be.an.Array.of.length(1);
+          should(results[0]).equal(a);
+
+        }).then(events.addListener('foo', fn2)).then(function () {
+          return events.emit('foo', a, b, c).then(function (results) {
+
+            results.should.be.an.Array.of.length(2);
+            should(results[0]).equal(a);
+            should(results[1]).equal(b);
+
+          }).then(events.addListener('foo', fn3)).then(function () {
+            return events.emit('foo', a, b, c).then(function (results) {
+
+              results.should.be.an.Array.of.length(3);
+              should(results[0]).equal(a);
+              should(results[1]).equal(b);
+              should(results[2]).equal(c);
+
+            });
+          });
+        });
+      }).then(done).catch(done);
+    });
+
+    it("should emit with many argument", function (done) {
+      var events = new Emitter();
+      var args = ['a', 'b', 'c', 'd'];
+      function fnGenerator(retVal) {
+        return function () {
+          arguments.should.have.lengthOf(args.length);
+          Array.prototype.slice.call(arguments).should.eql(args);
+
+          return retVal;
+        }
+      }
+
+      events.addListener('foo', fnGenerator(1)).then(function () {
+        return events.emit('foo', 'a', 'b', 'c', 'd').then(function (results) {
+
+          results.should.be.an.Array.of.length(1);
+          should(results[0]).equal(1);
+
+        }).then(events.addListener('foo', fnGenerator(2))).then(function () {
+          return events.emit('foo', 'a', 'b', 'c', 'd').then(function (results) {
+
+            results.should.be.an.Array.of.length(2);
+            should(results[0]).equal(1);
+            should(results[1]).equal(2);
+
+          });
+        });
+      }).then(done).catch(done);
+    });
 
   });
 
