@@ -33,6 +33,7 @@ describe("Test Promise Events Emitter", function () {
     events.hasOwnProperty('_maxListeners');
   });
 
+
   it("should add and remove listeners", function (done) {
     var events = new Emitter();
     var fn = function () {};
@@ -63,6 +64,7 @@ describe("Test Promise Events Emitter", function () {
     }).then(done).catch(done);
   });
 
+
   it("should not add invalid listeners", function (done) {
     var events = new Emitter();
 
@@ -86,7 +88,24 @@ describe("Test Promise Events Emitter", function () {
     })).then(function () {
       done();
     }).catch(done);
-  })
+  });
+
+
+  it("should not remove invalid listeners", function (done) {
+    var events = new Emitter();
+
+    Promise.all([undefined, null, false, true, -1, 0, 1, '', {}, [], /./].map(function (invalid) {
+      try {
+        events.removeListener('foo', invalid).then(function () {
+          throw new Error("Should not allow removing invalid listener : " + invalid);
+        });
+      } catch (e) {
+        // all good!
+      }
+    })).then(function () {
+      done();
+    }).catch(done);
+  });
 
 
   it("should remove all listeners", function (done) {
@@ -104,29 +123,47 @@ describe("Test Promise Events Emitter", function () {
       return events.removeAllListeners('foo').then(function () {
         events._events.should.not.have.ownProperty('foo');
         events._eventsCount.should.equal(0);
+        events.listeners('foo').should.be.an.Array.lengthOf(0);
 
         return events.addListener('foo', fn).then(function () {
           events._eventsCount.should.equal(1);
           events._events['foo'].should.be.a.Function;
+          events.listeners('foo').should.be.an.Array.lengthOf(1);
 
           return events.removeAllListeners('foo').then(function () {
             events._events.should.not.have.ownProperty('foo');
             events._eventsCount.should.equal(0);
 
-            return events.removeAllListeners('foo');
+            return events.removeAllListeners('foo').then(function () {
+
+              Emitter.listenerCount(events, 'bar').should.equal(0);
+
+              return events.removeListener('bar', fn).then(function () {
+
+                events._events = undefined;
+                events._eventsCount = 0;
+
+                events.listeners('foo').should.be.an.Array.lengthOf(0);
+                Emitter.listenerCount(events, 'foo').should.equal(0);
+
+                return events.removeListener('foo', fn).then(events.removeAllListeners());
+              });
+            });
           });
-
         });
-
       });
-
     }).then(done).catch(done);
-
   });
+
+
 
   it("should use domain events");
 
+
   it("should detect memory leak");
+
+
+  it("should handle emit errors");
 
 
   describe("Emitting events", function () {
@@ -151,6 +188,7 @@ describe("Test Promise Events Emitter", function () {
       }).then(done).catch(done);
     });
 
+
     it("should emit 'removeListener'", function (done) {
       var events = new Emitter();
       var fn = function () {};
@@ -173,6 +211,7 @@ describe("Test Promise Events Emitter", function () {
       }).then(done).catch(done);
     });
 
+
     it("should emit with no arguments", function (done) {
       var events = new Emitter();
       var fn = function () {
@@ -187,16 +226,25 @@ describe("Test Promise Events Emitter", function () {
           results.should.be.an.Array.of.length(1);
           should(results[0]).be.undefined;
 
-        }).then(events.on('foo', fn)).then(function () {
-          return events.emit('foo').then(function (results) {
+          console.log(events._events);
+          Emitter.listenerCount(events, 'foo').should.equal(1);
 
-            results.should.be.an.Array.of.length(2);
-            should(results[0]).be.undefined;
-            should(results[1]).be.undefined;
+          return events.on('foo', fn).then(function () {
+            return events.emit('foo').then(function (results) {
+
+              results.should.be.an.Array.of.length(2);
+              should(results[0]).be.undefined;
+              should(results[1]).be.undefined;
+
+              events.listeners('foo').should.be.an.Array.lengthOf(2);
+              Emitter.listenerCount(events, 'foo').should.equal(2);
+
+            });
           });
         });
       }).then(done).catch(done);
     });
+
 
     it("should emit with one argument", function (done) {
       var events = new Emitter();
@@ -227,6 +275,7 @@ describe("Test Promise Events Emitter", function () {
         });
       }).then(done).catch(done);
     });
+
 
     it("should emit with two argument", function (done) {
       var events = new Emitter();
@@ -267,6 +316,7 @@ describe("Test Promise Events Emitter", function () {
         });
       }).then(done).catch(done);
     });
+
 
     it("should emit with three argument", function (done) {
       var events = new Emitter();
@@ -330,6 +380,7 @@ describe("Test Promise Events Emitter", function () {
       }).then(done).catch(done);
     });
 
+
     it("should emit with many argument", function (done) {
       var events = new Emitter();
       var args = ['a', 'b', 'c', 'd'];
@@ -385,6 +436,7 @@ describe("Test Promise Events Emitter", function () {
       }).then(done).catch(done);
     });
 
+
     it("should emit 'removeListener'", function (done) {
       var events = new Emitter();
       var fn = function () {};
@@ -406,6 +458,7 @@ describe("Test Promise Events Emitter", function () {
         });
       }).then(done).catch(done);
     });
+
 
     it("should emit 'newListener' only once", function (done) {
       var events = new Emitter();
@@ -429,6 +482,7 @@ describe("Test Promise Events Emitter", function () {
       }).then(done).catch(done);
 
     });
+
 
     it("should emit with no arguments", function (done) {
       var events = new Emitter();
@@ -463,6 +517,7 @@ describe("Test Promise Events Emitter", function () {
         });
       }).then(done).catch(done);
     });
+
 
     it("should emit with one argument", function (done) {
       var events = new Emitter();
@@ -499,6 +554,7 @@ describe("Test Promise Events Emitter", function () {
         });
       }).then(done).catch(done);
     });
+
 
     it("should emit with two argument", function (done) {
       var events = new Emitter();
@@ -545,6 +601,7 @@ describe("Test Promise Events Emitter", function () {
         });
       }).then(done).catch(done);
     });
+
 
     it("should emit with three argument", function (done) {
       var events = new Emitter();
@@ -616,6 +673,7 @@ describe("Test Promise Events Emitter", function () {
       }).then(done).catch(done);
     });
 
+
     it("should emit with many argument", function (done) {
       var events = new Emitter();
       var args = ['a', 'b', 'c', 'd'];
@@ -652,5 +710,34 @@ describe("Test Promise Events Emitter", function () {
 
   });
 
+
+  describe("Test subclassing", function () {
+
+    it("should create valid instance", function (done) {
+      var util = require('util');
+      var SubEmitter = function () {};
+      var events;
+
+      util.inherits(SubEmitter, Emitter);
+
+      events = new SubEmitter();
+
+      events.should.be.instanceOf(Emitter);
+
+      events.should.not.have.ownProperty('_events');
+      events.should.not.have.ownProperty('_eventsCount');
+
+      events.on('foo', function () {}).then(function () {
+
+        events.should.have.ownProperty('_events').and.have.ownProperty('foo').be.a.Function;
+        events.should.have.ownProperty('_eventsCount').equal(1);
+
+      }).then(done).catch(done);
+
+    });
+
+
+
+  });
 
 });

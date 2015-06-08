@@ -308,10 +308,11 @@ function listenerCount(emitter, type) {
   var events = emitter._events;
   if (events) {
     evlistener = events[type];
-    if (typeof evlistener === 'function')
+    if (typeof evlistener === 'function') {
       ret = 1;
-    else if (evlistener)
+    } else if (evlistener) {
       ret = evlistener.length;
+    }
   }
   return ret;
 }
