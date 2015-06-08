@@ -1,0 +1,32 @@
+{
+  "name": "promise-events",
+  "version": "0.0.1",
+  "description": "A promise-based events emitter",
+  "author": "Yanick Rochon <yanick.rochon@gmail.com>",
+  "keywords": [
+    "promise",
+    "events",
+    "async",
+    "emitter"
+  ],
+  "license": "MIT",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha",
+    "test-cov": "istanbul cover _mocha",
+    "test-travis": "istanbul cover _mocha --report lcovonly"
+  },
+  "homepage": "https://github.com/yanickrochon/promise-events#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yanickrochon/promise-events.git"
+  },
+  "bugs": {
+    "url": "https://github.com/yanickrochon/promise-events/issues"
+  },
+  "devDependencies": {
+    "istanbul": "^0.3.14",
+    "mocha": "^2.2.5",
+    "should": "^6.0.3"
+  }
+}
