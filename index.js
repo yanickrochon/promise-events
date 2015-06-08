@@ -131,7 +131,7 @@ function once(type, listener) {
 
       fired = true;
       promise = emitter.removeListener(type, g).then(function () {
-        return emitMany(listener, true, emitter, args);
+        return listener.apply(this, args);
       });
     }
 
@@ -231,13 +231,16 @@ function removeAllListeners(type) {
   // not listening for removeListener, no need to emit
   if (!events.removeListener) {
     if (arguments.length === 0) {
-      this._events = {};
       this._eventsCount = 0;
+      this._events = {};
     } else if (events[type]) {
-      if (--this._eventsCount === 0)
+      if (this._eventsCount === 1) {
+        this._eventsCount = 0;
         this._events = {};
-      else
+      } else {
+        this._eventsCount = this._eventsCount - (typeof events[type] === 'function' ? 1 : events[type].length);
         delete events[type];
+      }
     }
 
     return Promise.resolve();
@@ -403,15 +406,17 @@ function emit(type) {
 
 function emitNone(handler, isFn, emitter) {
   var promiseList;
+  var handlers;
   var i, len;
 
   if (isFn) {
     promiseList = [handler.call(emitter)];
   } else {
+    handlers = handler.slice();
     promiseList = [];
 
-    for (i = 0, len = handler.length; i < len; ++i) {
-      promiseList[i] = handler[i].call(emitter);
+    for (i = 0, len = handlers.length; i < len; ++i) {
+      promiseList[i] = handlers[i].call(emitter);
     }
   }
 
@@ -421,16 +426,18 @@ function emitNone(handler, isFn, emitter) {
 
 function emitOne(handler, isFn, emitter, arg) {
   var promiseList;
+  var handlers;
   var i, len;
 
   if (isFn) {
     promiseList = [handler.call(emitter, arg)];
   } else {
-    len = handler.length;
+    handlers = handler.slice();
+    len = handlers.length
     promiseList = new Array(len);
 
     for (i = 0; i < len; ++i) {
-      promiseList[i] = handler[i].call(emitter, arg);
+      promiseList[i] = handlers[i].call(emitter, arg);
     }
   }
 
@@ -445,11 +452,12 @@ function emitTwo(handler, isFn, emitter, arg1, arg2) {
   if (isFn) {
     promiseList = [handler.call(emitter, arg1, arg2)];
   } else {
-    len = handler.length;
+    handlers = handler.slice();
+    len = handlers.length
     promiseList = new Array(len);
 
     for (i = 0; i < len; ++i) {
-      promiseList[i] = handler[i].call(emitter, arg1, arg2);
+      promiseList[i] = handlers[i].call(emitter, arg1, arg2);
     }
   }
 
@@ -464,11 +472,12 @@ function emitThree(handler, isFn, emitter, arg1, arg2, arg3) {
   if (isFn) {
     promiseList = [handler.call(emitter, arg1, arg2, arg3)];
   } else {
-    len = handler.length;
+    handlers = handler.slice();
+    len = handlers.length
     promiseList = new Array(len);
 
     for (i = 0; i < len; ++i) {
-      promiseList[i] = handler[i].call(emitter, arg1, arg2, arg3);
+      promiseList[i] = handlers[i].call(emitter, arg1, arg2, arg3);
     }
   }
 
@@ -483,11 +492,12 @@ function emitMany(handler, isFn, emitter, args) {
   if (isFn) {
     promiseList = [handler.apply(emitter, args)];
   } else {
-    len = handler.length;
+    handlers = handler.slice();
+    len = handlers.length
     promiseList = new Array(len);
 
     for (i = 0; i < len; ++i) {
-      promiseList[i] = handler[i].apply(emitter, args);
+      promiseList[i] = handlers[i].apply(emitter, args);
     }
   }
 
