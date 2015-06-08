@@ -31,13 +31,12 @@ events.on('foo', function standardHandler() {
 // ... later...
 
 events.emit('foo', { user: 'me', pass: 's3cr37'}).then(function (results) {
-  // result[0] == undefined (no return value from standardHandler
-  // result[1] == "Hello world!"
+  // result[0] == "Hello world!"
 });
 
 ```
 
-All listeners are executed using [`Promise.all`](https://people.mozilla.org/~jorendorff/es6-draft.html#sec-promise.all).
+All listeners are executed using [`Promise.all`](https://people.mozilla.org/~jorendorff/es6-draft.html#sec-promise.all), and empty results (listeners returning no result or `undefined`) are filtered out. The order of the items in `results` is undefined. Therefore, the number of listeners and the order they are added to the emitter do not garantee the order of values returned when emitting an event; do not rely on `results` to determine a listener's return value.
 
 
 ## Contribution

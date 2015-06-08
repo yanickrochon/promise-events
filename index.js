@@ -401,7 +401,14 @@ function emit(type) {
     });
   }
 
-  return promise;
+  return promise.then(function (results) {
+    return results.filter(noValue);
+  });
+}
+
+
+function noValue(item) {
+  return item !== undefined;
 }
 
 
