@@ -2,7 +2,7 @@
 
 describe("Test Promise Events Emitter", function () {
 
-  var Emitter = require('../index');
+  var Emitter = require('../emitter');
   var should = require('should');
 
 
@@ -118,17 +118,17 @@ describe("Test Promise Events Emitter", function () {
 
       events._events.should.have.ownProperty('foo');
       events._eventsCount.should.equal(3);
-      events._events['foo'].should.be.an.Array.lengthOf(3);
+      events._events['foo'].should.be.an.instanceOf(Array).and.have.lengthOf(3);
 
       return events.removeAllListeners('foo').then(function () {
         events._events.should.not.have.ownProperty('foo');
         events._eventsCount.should.equal(0);
-        events.listeners('foo').should.be.an.Array.lengthOf(0);
+        events.listeners('foo').should.be.an.instanceOf(Array).and.have.lengthOf(0);
 
         return events.addListener('foo', fn).then(function () {
           events._eventsCount.should.equal(1);
           events._events['foo'].should.be.a.Function;
-          events.listeners('foo').should.be.an.Array.lengthOf(1);
+          events.listeners('foo').should.be.an.instanceOf(Array).and.have.lengthOf(1);
 
           return events.removeAllListeners('foo').then(function () {
             events._events.should.not.have.ownProperty('foo');
@@ -143,7 +143,7 @@ describe("Test Promise Events Emitter", function () {
                 events._events = undefined;
                 events._eventsCount = 0;
 
-                events.listeners('foo').should.be.an.Array.lengthOf(0);
+                events.listeners('foo').should.be.an.instanceOf(Array).and.have.lengthOf(0);
                 Emitter.listenerCount(events, 'foo').should.equal(0);
 
                 return events.removeListener('foo', fn).then(events.removeAllListeners());
@@ -160,10 +160,78 @@ describe("Test Promise Events Emitter", function () {
   it("should use domain events");
 
 
-  it("should detect memory leak");
+  it("should detect memory leak", function () {
+    var events = new Emitter();
+    var _error = console.error;
+    var _trace = console.trace;
+    var errorCount = 0;
+    var traceCount = 0;
+
+    console.error = function () {
+      ++errorCount;
+    };
+    console.trace = function () {
+      ++traceCount;
+    };
+
+    for (var i = 0; i < events.maxListeners + 2; ++i) {
+      events.listeners('test').length.should.equal(i);
+      events.on('test', function () {});
+    }
+
+    events.listeners('test').length.should.equal(events.maxListeners + 2);
+
+    errorCount.should.equal(1);
+    traceCount.should.equal(1);
+
+    events.removeAllListeners();
+    events.listeners('test').length.should.equal(0);
+
+    console.error = _error;
+    console.trace = _trace;
+  });
 
 
-  it("should handle emit errors");
+  it("should handle emitted errors", function (done) {
+    var events = new Emitter();
+
+    events.on('foo', function () {
+      throw new Error('Test');
+    }).then(function () {
+
+      Promise.all([
+        events.emit('foo').then(function () {
+          throw new Error('Failed test');
+        }, function (err) {
+          err.message.should.equal('Test');
+        }),
+        events.emit('foo', 1).then(function () {
+          throw new Error('Failed test');
+        }, function (err) {
+          err.message.should.equal('Test');
+        }),
+        events.emit('foo', 1, 2).then(function () {
+          throw new Error('Failed test');
+        }, function (err) {
+          err.message.should.equal('Test');
+        }),
+        events.emit('foo', 1, 2, 3).then(function () {
+          throw new Error('Failed test');
+        }, function (err) {
+          err.message.should.equal('Test');
+        }),
+        events.emit('foo', 1, 2, 3, 4).then(function () {
+          throw new Error('Failed test');
+        }, function (err) {
+          err.message.should.equal('Test');
+        })
+      ]).then(function () {
+        done();
+      }).catch(done);
+
+    });
+
+  });
 
 
   describe("Emitting events", function () {
@@ -223,16 +291,16 @@ describe("Test Promise Events Emitter", function () {
       events.addListener('foo', fn).then(function () {
         return events.emit('foo').then(function (results) {
 
-          results.should.be.an.Array.of.length(0);
+          results.should.be.an.instanceOf(Array).and.have.lengthOf(0);
 
           Emitter.listenerCount(events, 'foo').should.equal(1);
 
           return events.on('foo', fn).then(function () {
             return events.emit('foo').then(function (results) {
 
-              results.should.be.an.Array.of.length(0);
+              results.should.be.an.instanceOf(Array).and.have.lengthOf(0);
 
-              events.listeners('foo').should.be.an.Array.lengthOf(2);
+              events.listeners('foo').should.be.an.instanceOf(Array).and.have.lengthOf(2);
               Emitter.listenerCount(events, 'foo').should.equal(2);
 
             });
@@ -258,13 +326,13 @@ describe("Test Promise Events Emitter", function () {
       events.addListener('foo', fn).then(function () {
         return events.emit('foo', a).then(function (results) {
 
-          results.should.be.an.Array.of.length(1);
+          results.should.be.an.instanceOf(Array).and.have.lengthOf(1);
           should(results[0]).equal(a);
 
         }).then(events.on('foo', fn)).then(function () {
           return events.emit('foo', a).then(function (results) {
 
-            results.should.be.an.Array.of.length(2);
+            results.should.be.an.instanceOf(Array).and.have.lengthOf(2);
             should(results[0]).equal(a);
             should(results[1]).equal(a);
           });
@@ -299,13 +367,13 @@ describe("Test Promise Events Emitter", function () {
       events.addListener('foo', fn1).then(function () {
         return events.emit('foo', a, b).then(function (results) {
 
-          results.should.be.an.Array.of.length(1);
+          results.should.be.an.instanceOf(Array).and.have.lengthOf(1);
           should(results[0]).equal(a);
 
         }).then(events.on('foo', fn2)).then(function () {
           return events.emit('foo', a, b).then(function (results) {
 
-            results.should.be.an.Array.of.length(2);
+            results.should.be.an.instanceOf(Array).and.have.lengthOf(2);
             should(results[0]).equal(a);
             should(results[1]).equal(b);
           });
@@ -352,20 +420,20 @@ describe("Test Promise Events Emitter", function () {
       events.addListener('foo', fn1).then(function () {
         return events.emit('foo', a, b, c).then(function (results) {
 
-          results.should.be.an.Array.of.length(1);
+          results.should.be.an.instanceOf(Array).and.have.lengthOf(1);
           should(results[0]).equal(a);
 
         }).then(events.addListener('foo', fn2)).then(function () {
           return events.emit('foo', a, b, c).then(function (results) {
 
-            results.should.be.an.Array.of.length(2);
+            results.should.be.an.instanceOf(Array).and.have.lengthOf(2);
             should(results[0]).equal(a);
             should(results[1]).equal(b);
 
           }).then(events.on('foo', fn3)).then(function () {
             return events.emit('foo', a, b, c).then(function (results) {
 
-              results.should.be.an.Array.of.length(3);
+              results.should.be.an.instanceOf(Array).and.have.lengthOf(3);
               should(results[0]).equal(a);
               should(results[1]).equal(b);
               should(results[2]).equal(c);
@@ -392,13 +460,13 @@ describe("Test Promise Events Emitter", function () {
       events.addListener('foo', fnGenerator(1)).then(function () {
         return events.emit('foo', 'a', 'b', 'c', 'd').then(function (results) {
 
-          results.should.be.an.Array.of.length(1);
+          results.should.be.an.instanceOf(Array).and.have.lengthOf(1);
           should(results[0]).equal(1);
 
         }).then(events.on('foo', fnGenerator(2))).then(function () {
           return events.emit('foo', 'a', 'b', 'c', 'd').then(function (results) {
 
-            results.should.be.an.Array.of.length(2);
+            results.should.be.an.instanceOf(Array).and.have.lengthOf(2);
             should(results[0]).equal(1);
             should(results[1]).equal(2);
 
@@ -493,7 +561,7 @@ describe("Test Promise Events Emitter", function () {
 
         return events.emit('foo').then(function (results) {
 
-          results.should.be.an.Array.of.length(0);
+          results.should.be.an.instanceOf(Array).and.have.lengthOf(0);
 
           events._events.should.not.have.ownProperty('foo');
 
@@ -502,7 +570,7 @@ describe("Test Promise Events Emitter", function () {
 
             return events.emit('foo').then(function (results) {
 
-              results.should.be.an.Array.of.length(0);
+              results.should.be.an.instanceOf(Array).and.have.lengthOf(0);
 
               events._events.should.not.have.ownProperty('foo');
             });
@@ -528,7 +596,7 @@ describe("Test Promise Events Emitter", function () {
       events.once('foo', fn).then(function () {
         return events.emit('foo', a).then(function (results) {
 
-          results.should.be.an.Array.of.length(1);
+          results.should.be.an.instanceOf(Array).and.have.lengthOf(1);
           should(results[0]).equal(a);
 
           events._events.should.not.have.ownProperty('foo');
@@ -536,7 +604,7 @@ describe("Test Promise Events Emitter", function () {
           return events.once('foo', fn).then(events.once('foo', fn)).then(function (results) {
             return events.emit('foo', a).then(function (results) {
 
-              results.should.be.an.Array.of.length(2);
+              results.should.be.an.instanceOf(Array).and.have.lengthOf(2);
               should(results[0]).equal(a);
               should(results[1]).equal(a);
 
@@ -575,7 +643,7 @@ describe("Test Promise Events Emitter", function () {
       events.once('foo', fn1).then(function () {
         return events.emit('foo', a, b).then(function (results) {
 
-          results.should.be.an.Array.of.length(1);
+          results.should.be.an.instanceOf(Array).and.have.lengthOf(1);
           should(results[0]).equal(a);
 
           events._events.should.not.have.ownProperty('foo');
@@ -583,7 +651,7 @@ describe("Test Promise Events Emitter", function () {
           return events.once('foo', fn1).then(events.once('foo', fn2)).then(function (results) {
             return events.emit('foo', a, b).then(function (results) {
 
-              results.should.be.an.Array.of.length(2);
+              results.should.be.an.instanceOf(Array).and.have.lengthOf(2);
               should(results[0]).equal(a);
               should(results[1]).equal(b);
 
@@ -634,7 +702,7 @@ describe("Test Promise Events Emitter", function () {
       events.once('foo', fn1).then(function () {
         return events.emit('foo', a, b, c).then(function (results) {
 
-          results.should.be.an.Array.of.length(1);
+          results.should.be.an.instanceOf(Array).and.have.lengthOf(1);
           should(results[0]).equal(a);
 
           events._events.should.not.have.ownProperty('foo');
@@ -642,7 +710,7 @@ describe("Test Promise Events Emitter", function () {
           return events.once('foo', fn1).then(events.once('foo', fn2)).then(function () {
             return events.emit('foo', a, b, c).then(function (results) {
 
-              results.should.be.an.Array.of.length(2);
+              results.should.be.an.instanceOf(Array).and.have.lengthOf(2);
               should(results[0]).equal(a);
               should(results[1]).equal(b);
 
@@ -651,7 +719,7 @@ describe("Test Promise Events Emitter", function () {
               return events.once('foo', fn1).then(events.once('foo', fn2)).then(events.once('foo', fn3)).then(function () {
                 return events.emit('foo', a, b, c).then(function (results) {
 
-                  results.should.be.an.Array.of.length(3);
+                  results.should.be.an.instanceOf(Array).and.have.lengthOf(3);
                   should(results[0]).equal(a);
                   should(results[1]).equal(b);
                   should(results[2]).equal(c);
@@ -682,7 +750,7 @@ describe("Test Promise Events Emitter", function () {
       events.once('foo', fnGenerator(1)).then(function () {
         return events.emit('foo', 'a', 'b', 'c', 'd').then(function (results) {
 
-          results.should.be.an.Array.of.length(1);
+          results.should.be.an.instanceOf(Array).and.have.lengthOf(1);
           should(results[0]).equal(1);
 
           events._events.should.not.have.ownProperty('foo');
@@ -690,7 +758,7 @@ describe("Test Promise Events Emitter", function () {
           return events.once('foo', fnGenerator(1)).then(events.once('foo', fnGenerator(2))).then(function () {
             return events.emit('foo', 'a', 'b', 'c', 'd').then(function (results) {
 
-              results.should.be.an.Array.of.length(2);
+              results.should.be.an.instanceOf(Array).and.have.lengthOf(2);
               should(results[0]).equal(1);
               should(results[1]).equal(2);
 

@@ -1,6 +1,6 @@
 {
   "name": "promise-events",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "description": "A promise-based events emitter",
   "author": "Yanick Rochon <yanick.rochon@gmail.com>",
   "keywords": [
@@ -10,7 +10,7 @@
     "emitter"
   ],
   "license": "MIT",
-  "main": "index.js",
+  "main": "emitter.js",
   "scripts": {
     "test": "mocha",
     "test-cov": "istanbul cover _mocha",
@@ -25,8 +25,8 @@
     "url": "https://github.com/yanickrochon/promise-events/issues"
   },
   "devDependencies": {
-    "istanbul": "^0.3.14",
-    "mocha": "^2.2.5",
-    "should": "^6.0.3"
+    "istanbul": "^0.4.0",
+    "mocha": "^2.3.4",
+    "should": "^7.1.1"
   }
 }
