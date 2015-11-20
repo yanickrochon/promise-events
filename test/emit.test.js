@@ -1,246 +1,19 @@
 
+'use strict';
 
-describe("Test Promise Events Emitter", function () {
+describe("Test emitting events", function () {
 
-  var Emitter = require('../emitter');
-  var should = require('should');
-
-
-  it("should provide standard emitter interface", function () {
-    var events = new Emitter();
-
-    Emitter.prototype.getMaxListeners.should.be.a.Function;
-    Emitter.prototype.setMaxListeners.should.be.a.Function;
-    Emitter.prototype.emit.should.be.a.Function;
-    Emitter.prototype.addListener.should.be.a.Function;
-    Emitter.prototype.on.should.be.a.Function;
-    Emitter.prototype.once.should.be.a.Function;
-    Emitter.prototype.removeListener.should.be.a.Function;
-    Emitter.prototype.removeAllListeners.should.be.a.Function;
-    Emitter.prototype.listeners.should.be.a.Function;
-
-    events.getMaxListeners.should.be.a.Function;
-    events.setMaxListeners.should.be.a.Function;
-    events.emit.should.be.a.Function;
-    events.addListener.should.be.a.Function;
-    events.on.should.be.a.Function;
-    events.once.should.be.a.Function;
-    events.removeListener.should.be.a.Function;
-    events.removeAllListeners.should.be.a.Function;
-    events.listeners.should.be.a.Function;
-
-    events.hasOwnProperty('_events');
-    events.hasOwnProperty('_maxListeners');
-  });
-
-
-  it("should add and remove listeners", function (done) {
-    var events = new Emitter();
-    var fn = function () {};
-
-    this.timeout(1000);
-
-    events._eventsCount.should.equal(0);
-
-    events.addListener('foo', fn).then(function () {
-      events._eventsCount.should.equal(1);
-      events._events['foo'].should.equal(fn);
-
-      return events.addListener('foo', fn);
-    }).then(function () {
-      events._eventsCount.should.equal(2);
-      events._events['foo'].should.eql([fn, fn]);
-
-      return events.removeListener('foo', fn);
-    }).then(function () {
-      events._eventsCount.should.equal(1);
-      events._events['foo'].should.equal(fn);
-
-      return events.removeListener('foo', fn);
-    }).then(function () {
-      events._eventsCount.should.equal(0);
-      events._events.should.eql({});
-
-    }).then(done).catch(done);
-  });
-
-
-  it("should not add invalid listeners", function (done) {
-    var events = new Emitter();
-
-    Promise.all([undefined, null, false, true, -1, 0, 1, '', {}, [], /./].map(function (invalid) {
-      try {
-        events.on('foo', invalid).then(function () {
-          throw new Error("Should not allow adding invalid listener : " + invalid);
-        });
-      } catch (e) {
-        // all good!
-      }
-
-      try {
-        events.once('foo', invalid).then(function () {
-          throw new Error("Should not allow adding invalid once listener : " + invalid);
-        });
-      } catch (e) {
-        // all good!
-      }
-
-    })).then(function () {
-      done();
-    }).catch(done);
-  });
-
-
-  it("should not remove invalid listeners", function (done) {
-    var events = new Emitter();
-
-    Promise.all([undefined, null, false, true, -1, 0, 1, '', {}, [], /./].map(function (invalid) {
-      try {
-        events.removeListener('foo', invalid).then(function () {
-          throw new Error("Should not allow removing invalid listener : " + invalid);
-        });
-      } catch (e) {
-        // all good!
-      }
-    })).then(function () {
-      done();
-    }).catch(done);
-  });
-
-
-  it("should remove all listeners", function (done) {
-    var events = new Emitter();
-    var fn = function () {};
-
-    this.timeout(1000);
-
-    events.addListener('foo', fn).then(events.on('foo', fn)).then(events.addListener('foo', fn)).then(function () {
-
-      events._events.should.have.ownProperty('foo');
-      events._eventsCount.should.equal(3);
-      events._events['foo'].should.be.an.instanceOf(Array).and.have.lengthOf(3);
-
-      return events.removeAllListeners('foo').then(function () {
-        events._events.should.not.have.ownProperty('foo');
-        events._eventsCount.should.equal(0);
-        events.listeners('foo').should.be.an.instanceOf(Array).and.have.lengthOf(0);
-
-        return events.addListener('foo', fn).then(function () {
-          events._eventsCount.should.equal(1);
-          events._events['foo'].should.be.a.Function;
-          events.listeners('foo').should.be.an.instanceOf(Array).and.have.lengthOf(1);
-
-          return events.removeAllListeners('foo').then(function () {
-            events._events.should.not.have.ownProperty('foo');
-            events._eventsCount.should.equal(0);
-
-            return events.removeAllListeners('foo').then(function () {
-
-              Emitter.listenerCount(events, 'bar').should.equal(0);
-
-              return events.removeListener('bar', fn).then(function () {
-
-                events._events = undefined;
-                events._eventsCount = 0;
-
-                events.listeners('foo').should.be.an.instanceOf(Array).and.have.lengthOf(0);
-                Emitter.listenerCount(events, 'foo').should.equal(0);
-
-                return events.removeListener('foo', fn).then(events.removeAllListeners());
-              });
-            });
-          });
-        });
-      });
-    }).then(done).catch(done);
-  });
-
-
-
-  it("should use domain events");
-
-
-  it("should detect memory leak", function () {
-    var events = new Emitter();
-    var _error = console.error;
-    var _trace = console.trace;
-    var errorCount = 0;
-    var traceCount = 0;
-
-    console.error = function () {
-      ++errorCount;
-    };
-    console.trace = function () {
-      ++traceCount;
-    };
-
-    for (var i = 0; i < events.maxListeners + 2; ++i) {
-      events.listeners('test').length.should.equal(i);
-      events.on('test', function () {});
-    }
-
-    events.listeners('test').length.should.equal(events.maxListeners + 2);
-
-    errorCount.should.equal(1);
-    traceCount.should.equal(1);
-
-    events.removeAllListeners();
-    events.listeners('test').length.should.equal(0);
-
-    console.error = _error;
-    console.trace = _trace;
-  });
-
-
-  it("should handle emitted errors", function (done) {
-    var events = new Emitter();
-
-    events.on('foo', function () {
-      throw new Error('Test');
-    }).then(function () {
-
-      Promise.all([
-        events.emit('foo').then(function () {
-          throw new Error('Failed test');
-        }, function (err) {
-          err.message.should.equal('Test');
-        }),
-        events.emit('foo', 1).then(function () {
-          throw new Error('Failed test');
-        }, function (err) {
-          err.message.should.equal('Test');
-        }),
-        events.emit('foo', 1, 2).then(function () {
-          throw new Error('Failed test');
-        }, function (err) {
-          err.message.should.equal('Test');
-        }),
-        events.emit('foo', 1, 2, 3).then(function () {
-          throw new Error('Failed test');
-        }, function (err) {
-          err.message.should.equal('Test');
-        }),
-        events.emit('foo', 1, 2, 3, 4).then(function () {
-          throw new Error('Failed test');
-        }, function (err) {
-          err.message.should.equal('Test');
-        })
-      ]).then(function () {
-        done();
-      }).catch(done);
-
-    });
-
-  });
+  const Emitter = require('../emitter');
+  const should = require('should');
 
 
   describe("Emitting events", function () {
 
     it("should emit 'newListener'", function (done) {
-      var events = new Emitter();
-      var fnFoo = function foo() {};
-      var fnBar = function bar() {};
-      var listeners = {};
+      let events = new Emitter();
+      let fnFoo = function foo() {};
+      let fnBar = function bar() {};
+      let listeners = {};
 
       this.timeout(1000);
 
@@ -258,9 +31,9 @@ describe("Test Promise Events Emitter", function () {
 
 
     it("should emit 'removeListener'", function (done) {
-      var events = new Emitter();
-      var fn = function () {};
-      var listeners = { 'foo': fn };
+      let events = new Emitter();
+      let fn = function () {};
+      let listeners = { 'foo': fn };
 
       this.timeout(1000);
 
@@ -281,8 +54,8 @@ describe("Test Promise Events Emitter", function () {
 
 
     it("should emit with no arguments", function (done) {
-      var events = new Emitter();
-      var fn = function () {
+      let events = new Emitter();
+      let fn = function () {
         arguments.should.have.lengthOf(0);
       };
 
@@ -311,9 +84,9 @@ describe("Test Promise Events Emitter", function () {
 
 
     it("should emit with one argument", function (done) {
-      var events = new Emitter();
-      var a = 'Hello';
-      var fn = function (arg1) {
+      let events = new Emitter();
+      let a = 'Hello';
+      let fn = function (arg1) {
         arguments.should.have.lengthOf(1);
 
         arg1.should.equal(a);
@@ -342,10 +115,10 @@ describe("Test Promise Events Emitter", function () {
 
 
     it("should emit with two argument", function (done) {
-      var events = new Emitter();
-      var a = 'Hello';
-      var b = 'World';
-      var fn1 = function (arg1, arg2) {
+      let events = new Emitter();
+      let a = 'Hello';
+      let b = 'World';
+      let fn1 = function (arg1, arg2) {
         arguments.should.have.lengthOf(2);
 
         arg1.should.equal(a);
@@ -353,7 +126,7 @@ describe("Test Promise Events Emitter", function () {
 
         return arg1;
       };
-      var fn2 = function (arg1, arg2) {
+      let fn2 = function (arg1, arg2) {
         arguments.should.have.lengthOf(2);
 
         arg1.should.equal(a);
@@ -383,11 +156,11 @@ describe("Test Promise Events Emitter", function () {
 
 
     it("should emit with three argument", function (done) {
-      var events = new Emitter();
-      var a = 'Hello';
-      var b = 'World';
-      var c = '!!';
-      var fn1 = function (arg1, arg2, arg3) {
+      let events = new Emitter();
+      let a = 'Hello';
+      let b = 'World';
+      let c = '!!';
+      let fn1 = function (arg1, arg2, arg3) {
         arguments.should.have.lengthOf(3);
 
         arg1.should.equal(a);
@@ -396,7 +169,7 @@ describe("Test Promise Events Emitter", function () {
 
         return arg1;
       };
-      var fn2 = function (arg1, arg2, arg3) {
+      let fn2 = function (arg1, arg2, arg3) {
         arguments.should.have.lengthOf(3);
 
         arg1.should.equal(a);
@@ -405,7 +178,7 @@ describe("Test Promise Events Emitter", function () {
 
         return arg2;
       };
-      var fn3 = function (arg1, arg2, arg3) {
+      let fn3 = function (arg1, arg2, arg3) {
         arguments.should.have.lengthOf(3);
 
         arg1.should.equal(a);
@@ -446,8 +219,8 @@ describe("Test Promise Events Emitter", function () {
 
 
     it("should emit with many argument", function (done) {
-      var events = new Emitter();
-      var args = ['a', 'b', 'c', 'd'];
+      let events = new Emitter();
+      let args = ['a', 'b', 'c', 'd'];
       function fnGenerator(retVal) {
         return function () {
           arguments.should.have.lengthOf(args.length);
@@ -481,10 +254,10 @@ describe("Test Promise Events Emitter", function () {
   describe("Emitting event once", function () {
 
     it("should emit 'newListener'", function (done) {
-      var events = new Emitter();
-      var fnFoo = function foo() {};
-      var fnBar = function bar() {};
-      var listeners = {};
+      let events = new Emitter();
+      let fnFoo = function foo() {};
+      let fnBar = function bar() {};
+      let listeners = {};
 
       this.timeout(1000);
 
@@ -502,9 +275,9 @@ describe("Test Promise Events Emitter", function () {
 
 
     it("should emit 'removeListener'", function (done) {
-      var events = new Emitter();
-      var fn = function () {};
-      var listeners = { 'foo': fn };
+      let events = new Emitter();
+      let fn = function () {};
+      let listeners = { 'foo': fn };
 
       this.timeout(1000);
 
@@ -525,9 +298,9 @@ describe("Test Promise Events Emitter", function () {
 
 
     it("should emit 'newListener' only once", function (done) {
-      var events = new Emitter();
-      var fn = function () {};
-      var newHandlerCount = 0;
+      let events = new Emitter();
+      let fn = function () {};
+      let newHandlerCount = 0;
 
       this.timeout(1000);
 
@@ -549,8 +322,8 @@ describe("Test Promise Events Emitter", function () {
 
 
     it("should emit with no arguments", function (done) {
-      var events = new Emitter();
-      var fn = function () {
+      let events = new Emitter();
+      let fn = function () {
         arguments.should.have.lengthOf(0);
       };
 
@@ -581,9 +354,9 @@ describe("Test Promise Events Emitter", function () {
 
 
     it("should emit with one argument", function (done) {
-      var events = new Emitter();
-      var a = 'Hello';
-      var fn = function (arg1) {
+      let events = new Emitter();
+      let a = 'Hello';
+      let fn = function (arg1) {
         arguments.should.have.lengthOf(1);
 
         arg1.should.equal(a);
@@ -618,10 +391,10 @@ describe("Test Promise Events Emitter", function () {
 
 
     it("should emit with two argument", function (done) {
-      var events = new Emitter();
-      var a = 'Hello';
-      var b = 'World';
-      var fn1 = function (arg1, arg2) {
+      let events = new Emitter();
+      let a = 'Hello';
+      let b = 'World';
+      let fn1 = function (arg1, arg2) {
         arguments.should.have.lengthOf(2);
 
         arg1.should.equal(a);
@@ -629,7 +402,7 @@ describe("Test Promise Events Emitter", function () {
 
         return arg1;
       };
-      var fn2 = function (arg1, arg2) {
+      let fn2 = function (arg1, arg2) {
         arguments.should.have.lengthOf(2);
 
         arg1.should.equal(a);
@@ -665,11 +438,11 @@ describe("Test Promise Events Emitter", function () {
 
 
     it("should emit with three argument", function (done) {
-      var events = new Emitter();
-      var a = 'Hello';
-      var b = 'World';
-      var c = '!!';
-      var fn1 = function (arg1, arg2, arg3) {
+      let events = new Emitter();
+      let a = 'Hello';
+      let b = 'World';
+      let c = '!!';
+      let fn1 = function (arg1, arg2, arg3) {
         arguments.should.have.lengthOf(3);
 
         arg1.should.equal(a);
@@ -678,7 +451,7 @@ describe("Test Promise Events Emitter", function () {
 
         return arg1;
       };
-      var fn2 = function (arg1, arg2, arg3) {
+      let fn2 = function (arg1, arg2, arg3) {
         arguments.should.have.lengthOf(3);
 
         arg1.should.equal(a);
@@ -687,7 +460,7 @@ describe("Test Promise Events Emitter", function () {
 
         return arg2;
       };
-      var fn3 = function (arg1, arg2, arg3) {
+      let fn3 = function (arg1, arg2, arg3) {
         arguments.should.have.lengthOf(3);
 
         arg1.should.equal(a);
@@ -736,8 +509,8 @@ describe("Test Promise Events Emitter", function () {
 
 
     it("should emit with many argument", function (done) {
-      var events = new Emitter();
-      var args = ['a', 'b', 'c', 'd'];
+      let events = new Emitter();
+      let args = ['a', 'b', 'c', 'd'];
       function fnGenerator(retVal) {
         return function () {
           arguments.should.have.lengthOf(args.length);
@@ -771,32 +544,5 @@ describe("Test Promise Events Emitter", function () {
 
   });
 
-
-  describe("Test subclassing", function () {
-
-    it("should create valid instance", function (done) {
-      var util = require('util');
-      var SubEmitter = function () {};
-      var events;
-
-      util.inherits(SubEmitter, Emitter);
-
-      events = new SubEmitter();
-
-      events.should.be.instanceOf(Emitter);
-
-      events.should.not.have.ownProperty('_events');
-      events.should.not.have.ownProperty('_eventsCount');
-
-      events.on('foo', function () {}).then(function () {
-
-        events.should.have.ownProperty('_events').and.have.ownProperty('foo').be.a.Function;
-        events.should.have.ownProperty('_eventsCount').equal(1);
-
-      }).then(done).catch(done);
-
-    });
-
-  });
 
 });

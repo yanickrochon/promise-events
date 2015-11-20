@@ -265,12 +265,7 @@ const EventEmitter = module.exports = class EventEmitter {
     }
 
     events = this._events;
-
-    if (!events) {
-      return Promise.resolve();
-    }
-
-    list = events[type];
+    list = events && events[type];
 
     if (!list) {
       return Promise.resolve();
@@ -396,18 +391,14 @@ const EventEmitter = module.exports = class EventEmitter {
     let ret;
     let events = this._events;
 
-    if (!events) {
-      ret = [];
-    } else {
-      evlistener = events[type];
+    evlistener = events && events[type];
 
-      if (!evlistener) {
-        ret = [];
-      } else if (typeof evlistener === 'function') {
-        ret = [evlistener];
-      } else {
-        ret = evlistener.slice();
-      }
+    if (!evlistener) {
+      ret = [];
+    } else if (typeof evlistener === 'function') {
+      ret = [evlistener];
+    } else {
+      ret = evlistener.slice();
     }
 
     return ret;
