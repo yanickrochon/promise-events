@@ -545,4 +545,67 @@ describe("Test emitting events", function () {
   });
 
 
+
+  describe('Test errors', function () {
+
+
+    it('should reject error instance when no error listeners', function (done) {
+      let events = new Emitter();
+
+      events.emit('error', new Error('Test Error')).then(function () {
+        throw new Error('Failed test');
+      }, function (err) {
+        err.should.be.instanceOf(Error).and.have.ownProperty('message').equal('Test Error');
+      }).then(done).catch(done);
+    });
+
+    it('should reject error string when no error listeners', function (done) {
+      let events = new Emitter();
+
+      events.emit('error', 'Test string').then(function () {
+        throw new Error('Failed test');
+      }, function (err) {
+        err.should.be.instanceOf(Error).and.have.ownProperty('message').equal('Uncaught, unspecified "error" event. (Test string)');
+      }).then(done).catch(done);
+    });
+
+    it('should reject undefined error when no error listeners', function (done) {
+      let events = new Emitter();
+
+      events.emit('error').then(function () {
+        throw new Error('Failed test');
+      }, function (err) {
+        err.should.be.instanceOf(Error).and.have.ownProperty('message').equal('Uncaught, unspecified "error" event.');
+      }).then(done).catch(done);
+    });
+
+    it('should reject even with undefined _events', function (done) {
+      let events = new Emitter();
+
+      events._events = null;
+
+      events.emit('error').then(function () {
+        throw new Error('Failed test');
+      }, function (err) {
+        err.should.be.instanceOf(Error).and.have.ownProperty('message').equal('Uncaught, unspecified "error" event.');
+      }).then(done).catch(done);
+    });
+
+  });
+
+
+  it('should resolve on missing listeners', function (done) {
+    let events = new Emitter();
+
+    events.emit('missing').then(done);
+  });
+
+  it('should resolve on missing listeners with undefined _events', function (done) {
+    let events = new Emitter();
+
+    events._events = null;
+
+    events.emit('missing').then(done);
+  });
+
 });

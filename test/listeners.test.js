@@ -153,9 +153,6 @@ describe("Test adding and removing listeners", function () {
   });
 
 
-  it('should emit removeListener events');
-
-
   it("should handle emitted errors", function (done) {
     var events = new Emitter();
 
