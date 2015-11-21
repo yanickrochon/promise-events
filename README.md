@@ -47,7 +47,9 @@ Promise.all([
 });
 ```
 
-All listeners are executed using [`Promise.all`](https://people.mozilla.org/~jorendorff/es6-draft.html#sec-promise.all), and empty results (listeners returning no result or `undefined`) are filtered out. The order of the items in `results` is undefined. Therefore, the number of listeners and the order they are added to the emitter do not garantee the order of values returned when emitting an event; do not rely on `results` to determine a listener's return value.
+All listeners are executed using [`Promise.all`](https://people.mozilla.org/~jorendorff/es6-draft.html#sec-promise.all), and empty results (listeners returning no result or `undefined`) are filtered out. The order of the items in `results` is undefined. Therefore, the number of listeners and the order they are added to the emitter does not garantee the order or number of values returned when emitting an event; do not rely on `results` to determine a listener's return value.
+
+A call to `events.emit` will always resolve with an array if successful or be rejected with a single `Error` upon any failure, at any given time, for any number of listeners (i.e. the first error thrown will be passed to the rejection callback and all subsequent will be ignored).
 
 
 ## Contribution
