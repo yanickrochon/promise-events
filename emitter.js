@@ -19,6 +19,7 @@ const EventEmitter = module.exports = class EventEmitter {
       this._eventsCount = 0;
     }
     this._maxListeners = this._maxListeners || undefined;
+    this._resultFilter = noValue;
   }
 
 
@@ -30,6 +31,23 @@ const EventEmitter = module.exports = class EventEmitter {
   setMaxListeners(n) {
     this.maxListeners = n;
 
+    return this;
+  }
+  
+  setResultFilter(filter) {
+    // allow a 'null' filter for accepting any result
+    if (filter === null) {
+      filter = function() {
+        return true;
+      }
+    }
+    
+    if (typeof filter !== 'function') {
+      throw new TypeError('filter must be a function');
+    }
+    
+    this._resultFilter = filter;
+    
     return this;
   }
 
@@ -169,9 +187,14 @@ const EventEmitter = module.exports = class EventEmitter {
         domain.exit();
       });
     }
+    
+    // keep a reference to _resultFilter since the filter function
+    // could theoretically set a new result filter, leading to
+    // undefined results
+    const resultFilter = this._resultFilter;
 
-    return promise.then(function (results) {
-      return results.filter(noValue);
+    return promise.then(function(results) {
+      return results.filter(resultFilter);
     });
   }
 
