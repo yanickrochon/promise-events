@@ -6,7 +6,7 @@ describe("Test inheritance", function () {
   const Emitter = require('../emitter');
 
 
-  it("should create valid instance", function (done) {
+  it("should create valid instance", function () {
     const util = require('util');
     const SubEmitter = function () {};
 
@@ -21,12 +21,12 @@ describe("Test inheritance", function () {
     events.should.not.have.ownProperty('_events');
     events.should.not.have.ownProperty('_eventsCount');
 
-    events.on('foo', function () {}).then(function () {
+    return events.on('foo', function () {}).then(function () {
 
       events.should.have.ownProperty('_events').and.have.ownProperty('foo').be.a.Function;
       events.should.have.ownProperty('_eventsCount').equal(1);
 
-    }).then(done).catch(done);
+    });
 
   });
 
