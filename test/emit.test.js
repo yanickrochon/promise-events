@@ -9,7 +9,7 @@ describe("Test emitting events", function () {
 
   describe("Emitting events", function () {
 
-    it("should emit 'newListener'", function (done) {
+    it("should emit 'newListener'", function () {
       let events = new Emitter();
       let fnFoo = function foo() {};
       let fnBar = function bar() {};
@@ -17,7 +17,7 @@ describe("Test emitting events", function () {
 
       this.timeout(1000);
 
-      events.addListener('newListener', function (type, listener) {
+      return events.addListener('newListener', function (type, listener) {
         listeners[type] = listener;
       }).then(function () {
         return events.addListener('foo', fnFoo).then(events.on('bar', fnBar)).then(function () {
@@ -26,18 +26,18 @@ describe("Test emitting events", function () {
           listeners.should.have.ownProperty('bar').and.equal(fnBar);
 
         });
-      }).then(done).catch(done);
+      });
     });
 
 
-    it("should emit 'removeListener'", function (done) {
+    it("should emit 'removeListener'", function () {
       let events = new Emitter();
       let fn = function () {};
       let listeners = { 'foo': fn };
 
       this.timeout(1000);
 
-      events.addListener('removeListener', function (type, listener) {
+      return events.addListener('removeListener', function (type, listener) {
         listener.should.equal(listeners[type]);
 
         listeners[type] = false;
@@ -49,11 +49,11 @@ describe("Test emitting events", function () {
 
           });
         });
-      }).then(done).catch(done);
+      });
     });
 
 
-    it("should emit with no arguments", function (done) {
+    it("should emit with no arguments", function () {
       let events = new Emitter();
       let fn = function () {
         arguments.should.have.lengthOf(0);
@@ -61,17 +61,17 @@ describe("Test emitting events", function () {
 
       this.timeout(1000);
 
-      events.addListener('foo', fn).then(function () {
+      return events.addListener('foo', fn).then(function () {
         return events.emit('foo').then(function (results) {
 
-          results.should.be.an.instanceOf(Array).and.have.lengthOf(0);
+          results.should.be.an.instanceOf(Array).and.have.lengthOf(1);
 
           Emitter.listenerCount(events, 'foo').should.equal(1);
 
           return events.on('foo', fn).then(function () {
             return events.emit('foo').then(function (results) {
 
-              results.should.be.an.instanceOf(Array).and.have.lengthOf(0);
+              results.should.be.an.instanceOf(Array).and.have.lengthOf(2);
 
               events.listeners('foo').should.be.an.instanceOf(Array).and.have.lengthOf(2);
               Emitter.listenerCount(events, 'foo').should.equal(2);
@@ -79,11 +79,11 @@ describe("Test emitting events", function () {
             });
           });
         });
-      }).then(done).catch(done);
+      });
     });
 
 
-    it("should emit with one argument", function (done) {
+    it("should emit with one argument", function () {
       let events = new Emitter();
       let a = 'Hello';
       let fn = function (arg1) {
@@ -96,7 +96,7 @@ describe("Test emitting events", function () {
 
       this.timeout(1000);
 
-      events.addListener('foo', fn).then(function () {
+      return events.addListener('foo', fn).then(function () {
         return events.emit('foo', a).then(function (results) {
 
           results.should.be.an.instanceOf(Array).and.have.lengthOf(1);
@@ -110,11 +110,11 @@ describe("Test emitting events", function () {
             should(results[1]).equal(a);
           });
         });
-      }).then(done).catch(done);
+      });
     });
 
 
-    it("should emit with two argument", function (done) {
+    it("should emit with two argument", function () {
       let events = new Emitter();
       let a = 'Hello';
       let b = 'World';
@@ -137,7 +137,7 @@ describe("Test emitting events", function () {
 
       this.timeout(1000);
 
-      events.addListener('foo', fn1).then(function () {
+      return events.addListener('foo', fn1).then(function () {
         return events.emit('foo', a, b).then(function (results) {
 
           results.should.be.an.instanceOf(Array).and.have.lengthOf(1);
@@ -151,11 +151,11 @@ describe("Test emitting events", function () {
             should(results[1]).equal(b);
           });
         });
-      }).then(done).catch(done);
+      });
     });
 
 
-    it("should emit with three argument", function (done) {
+    it("should emit with three argument", function () {
       let events = new Emitter();
       let a = 'Hello';
       let b = 'World';
@@ -190,7 +190,7 @@ describe("Test emitting events", function () {
 
       this.timeout(1000);
 
-      events.addListener('foo', fn1).then(function () {
+      return events.addListener('foo', fn1).then(function () {
         return events.emit('foo', a, b, c).then(function (results) {
 
           results.should.be.an.instanceOf(Array).and.have.lengthOf(1);
@@ -214,11 +214,11 @@ describe("Test emitting events", function () {
             });
           });
         });
-      }).then(done).catch(done);
+      });
     });
 
 
-    it("should emit with many argument", function (done) {
+    it("should emit with many argument", function () {
       let events = new Emitter();
       let args = ['a', 'b', 'c', 'd'];
       function fnGenerator(retVal) {
@@ -230,7 +230,7 @@ describe("Test emitting events", function () {
         }
       }
 
-      events.addListener('foo', fnGenerator(1)).then(function () {
+      return events.addListener('foo', fnGenerator(1)).then(function () {
         return events.emit('foo', 'a', 'b', 'c', 'd').then(function (results) {
 
           results.should.be.an.instanceOf(Array).and.have.lengthOf(1);
@@ -245,7 +245,7 @@ describe("Test emitting events", function () {
 
           });
         });
-      }).then(done).catch(done);
+      });
     });
 
   });
@@ -253,7 +253,7 @@ describe("Test emitting events", function () {
 
   describe("Emitting event once", function () {
 
-    it("should emit 'newListener'", function (done) {
+    it("should emit 'newListener'", function () {
       let events = new Emitter();
       let fnFoo = function foo() {};
       let fnBar = function bar() {};
@@ -261,7 +261,7 @@ describe("Test emitting events", function () {
 
       this.timeout(1000);
 
-      events.addListener('newListener', function (type, listener) {
+      return events.addListener('newListener', function (type, listener) {
         listeners[type] = listener;
       }).then(function () {
         return events.once('foo', fnFoo).then(events.on('bar', fnBar)).then(function () {
@@ -270,18 +270,18 @@ describe("Test emitting events", function () {
           listeners.should.have.ownProperty('bar').and.equal(fnBar);
 
         });
-      }).then(done).catch(done);
+      });
     });
 
 
-    it("should emit 'removeListener'", function (done) {
+    it("should emit 'removeListener'", function () {
       let events = new Emitter();
       let fn = function () {};
       let listeners = { 'foo': fn };
 
       this.timeout(1000);
 
-      events.addListener('removeListener', function (type, listener) {
+      return events.addListener('removeListener', function (type, listener) {
         listener.should.equal(listeners[type]);
 
         listeners[type] = false;
@@ -293,18 +293,18 @@ describe("Test emitting events", function () {
 
           });
         });
-      }).then(done).catch(done);
+      });
     });
 
 
-    it("should emit 'newListener' only once", function (done) {
+    it("should emit 'newListener' only once", function () {
       let events = new Emitter();
       let fn = function () {};
       let newHandlerCount = 0;
 
       this.timeout(1000);
 
-      events.once('newListener', function (type, listener) {
+      return events.once('newListener', function (type, listener) {
         ++newHandlerCount;
       }).then(function () {
         newHandlerCount.should.equal(0);
@@ -316,12 +316,12 @@ describe("Test emitting events", function () {
           events._eventsCount.should.equal(2);
 
         });
-      }).then(done).catch(done);
+      });
 
     });
 
 
-    it("should emit with no arguments", function (done) {
+    it("should emit with no arguments", function () {
       let events = new Emitter();
       let fn = function () {
         arguments.should.have.lengthOf(0);
@@ -329,12 +329,12 @@ describe("Test emitting events", function () {
 
       this.timeout(1000);
 
-      events.once('foo', fn).then(function () {
+      return events.once('foo', fn).then(function () {
         events._events.should.have.ownProperty('foo').and.be.a.Function;
 
         return events.emit('foo').then(function (results) {
 
-          results.should.be.an.instanceOf(Array).and.have.lengthOf(0);
+          results.should.be.an.instanceOf(Array).and.have.lengthOf(1);
 
           events._events.should.not.have.ownProperty('foo');
 
@@ -343,17 +343,17 @@ describe("Test emitting events", function () {
 
             return events.emit('foo').then(function (results) {
 
-              results.should.be.an.instanceOf(Array).and.have.lengthOf(0);
+              results.should.be.an.instanceOf(Array).and.have.lengthOf(2);
 
               events._events.should.not.have.ownProperty('foo');
             });
           });
         });
-      }).then(done).catch(done);
+      });
     });
 
 
-    it("should emit with one argument", function (done) {
+    it("should emit with one argument", function () {
       let events = new Emitter();
       let a = 'Hello';
       let fn = function (arg1) {
@@ -366,7 +366,7 @@ describe("Test emitting events", function () {
 
       this.timeout(1000);
 
-      events.once('foo', fn).then(function () {
+      return events.once('foo', fn).then(function () {
         return events.emit('foo', a).then(function (results) {
 
           results.should.be.an.instanceOf(Array).and.have.lengthOf(1);
@@ -386,11 +386,11 @@ describe("Test emitting events", function () {
             });
           });
         });
-      }).then(done).catch(done);
+      });
     });
 
 
-    it("should emit with two argument", function (done) {
+    it("should emit with two argument", function () {
       let events = new Emitter();
       let a = 'Hello';
       let b = 'World';
@@ -413,7 +413,7 @@ describe("Test emitting events", function () {
 
       this.timeout(1000);
 
-      events.once('foo', fn1).then(function () {
+      return events.once('foo', fn1).then(function () {
         return events.emit('foo', a, b).then(function (results) {
 
           results.should.be.an.instanceOf(Array).and.have.lengthOf(1);
@@ -433,11 +433,11 @@ describe("Test emitting events", function () {
             });
           });
         });
-      }).then(done).catch(done);
+      });
     });
 
 
-    it("should emit with three argument", function (done) {
+    it("should emit with three argument", function () {
       let events = new Emitter();
       let a = 'Hello';
       let b = 'World';
@@ -472,7 +472,7 @@ describe("Test emitting events", function () {
 
       this.timeout(1000);
 
-      events.once('foo', fn1).then(function () {
+      return events.once('foo', fn1).then(function () {
         return events.emit('foo', a, b, c).then(function (results) {
 
           results.should.be.an.instanceOf(Array).and.have.lengthOf(1);
@@ -504,11 +504,11 @@ describe("Test emitting events", function () {
             });
           });
         });
-      }).then(done).catch(done);
+      });
     });
 
 
-    it("should emit with many argument", function (done) {
+    it("should emit with many argument", function () {
       let events = new Emitter();
       let args = ['a', 'b', 'c', 'd'];
       function fnGenerator(retVal) {
@@ -520,7 +520,7 @@ describe("Test emitting events", function () {
         }
       }
 
-      events.once('foo', fnGenerator(1)).then(function () {
+      return events.once('foo', fnGenerator(1)).then(function () {
         return events.emit('foo', 'a', 'b', 'c', 'd').then(function (results) {
 
           results.should.be.an.instanceOf(Array).and.have.lengthOf(1);
@@ -539,7 +539,7 @@ describe("Test emitting events", function () {
             });
           });
         });
-      }).then(done).catch(done);
+      });
     });
 
   });
@@ -549,63 +549,126 @@ describe("Test emitting events", function () {
   describe('Test errors', function () {
 
 
-    it('should reject error instance when no error listeners', function (done) {
+    it('should reject error instance when no error listeners', function () {
       let events = new Emitter();
 
-      events.emit('error', new Error('Test Error')).then(function () {
+      return events.emit('error', new Error('Test Error')).then(function () {
         throw new Error('Failed test');
       }, function (err) {
         err.should.be.instanceOf(Error).and.have.ownProperty('message').equal('Test Error');
-      }).then(done).catch(done);
+      });
     });
 
-    it('should reject error string when no error listeners', function (done) {
+    it('should reject error string when no error listeners', function () {
       let events = new Emitter();
 
-      events.emit('error', 'Test string').then(function () {
+      return events.emit('error', 'Test string').then(function () {
         throw new Error('Failed test');
       }, function (err) {
         err.should.be.instanceOf(Error).and.have.ownProperty('message').equal('Uncaught, unspecified "error" event. (Test string)');
-      }).then(done).catch(done);
+      });
     });
 
-    it('should reject undefined error when no error listeners', function (done) {
+    it('should reject undefined error when no error listeners', function () {
       let events = new Emitter();
 
-      events.emit('error').then(function () {
+      return events.emit('error').then(function () {
         throw new Error('Failed test');
       }, function (err) {
         err.should.be.instanceOf(Error).and.have.ownProperty('message').equal('Uncaught, unspecified "error" event.');
-      }).then(done).catch(done);
+      });
     });
 
-    it('should reject even with undefined _events', function (done) {
+    it('should reject even with undefined _events', function () {
       let events = new Emitter();
 
       events._events = null;
 
-      events.emit('error').then(function () {
+      return events.emit('error').then(function () {
         throw new Error('Failed test');
       }, function (err) {
         err.should.be.instanceOf(Error).and.have.ownProperty('message').equal('Uncaught, unspecified "error" event.');
-      }).then(done).catch(done);
+      });
     });
 
   });
 
 
-  it('should resolve on missing listeners', function (done) {
+  it('should resolve on missing listeners', function () {
     let events = new Emitter();
 
-    events.emit('missing').then(done);
+    return events.emit('missing');
   });
 
-  it('should resolve on missing listeners with undefined _events', function (done) {
+  it('should resolve on missing listeners with undefined _events', function () {
     let events = new Emitter();
 
     events._events = null;
 
-    events.emit('missing').then(done);
+    return events.emit('missing');
   });
 
+  describe('Filtering the listener return values', function () {
+    
+    it('should not filter out undefined results by default', function () {
+      let events = new Emitter();
+      
+      return Promise.all([
+        events.on('foo', function() { return undefined; }),
+        events.on('foo', function() { return 1; }),
+        events.on('foo', function() { return 2; }),
+      ]).then(function() {
+        return events.emit('foo').then(function(results) {
+          results.sort().should.deepEqual([undefined, 1, 2].sort());
+        });
+      });
+    });
+
+    it('should accept custom result filters', function() {
+      let events = new Emitter();
+      
+      function filter(value) {
+        return value !== 2;
+      }
+      
+      events.setResultFilter(filter);
+      events._resultFilter.should.equal(filter);
+      
+      return Promise.all([
+        events.on('foo', function() { return undefined; }),
+        events.on('foo', function() { return 1; }),
+        events.on('foo', function() { return 2; }),
+      ]).then(function() {
+        return events.emit('foo').then(function(results) {
+          results.sort().should.deepEqual([undefined, 1].sort());
+        });
+      });
+    });
+    
+    it("should accept a custom 'undefined' filter", function() {
+      let events = new Emitter();
+      
+      events.setResultFilter(undefined);
+      
+      return Promise.all([
+        events.on('foo', function() { return undefined; }),
+        events.on('foo', function() { return 1; }),
+        events.on('foo', function() { return 2; }),
+      ]).then(function() {
+        return events.emit('foo').then(function(results) {
+          results.sort().should.deepEqual([undefined, 1, 2].sort());
+        });
+      });
+    });
+    
+    it('should throw when adding invalid filters', function() {
+      let events = new Emitter();
+      
+      try {
+        events.setResultFilter(42);
+      } catch (err) {
+        err.should.be.instanceOf(Error).and.have.ownProperty('message').equal('filter must be a function');
+      }
+    });
+  });
 });

@@ -6,7 +6,7 @@ describe("Test adding and removing listeners", function () {
   var should = require('should');
 
 
-  it("should add and remove listeners", function (done) {
+  it("should add and remove listeners", function () {
     var events = new Emitter();
     var fn = function () {};
 
@@ -14,7 +14,7 @@ describe("Test adding and removing listeners", function () {
 
     events._eventsCount.should.equal(0);
 
-    events.addListener('foo', fn).then(function () {
+    return events.addListener('foo', fn).then(function () {
       events._eventsCount.should.equal(1);
       events._events['foo'].should.equal(fn);
 
@@ -39,14 +39,14 @@ describe("Test adding and removing listeners", function () {
       events._events.should.eql({});
 
       return events.removeListener('buz', fn);
-    }).then(done).catch(done);
+    });
   });
 
 
-  it("should not add invalid listeners", function (done) {
+  it("should not add invalid listeners", function () {
     var events = new Emitter();
 
-    Promise.all([undefined, null, false, true, -1, 0, 1, '', {}, [], /./].map(function (invalid) {
+    return Promise.all([undefined, null, false, true, -1, 0, 1, '', {}, [], /./].map(function (invalid) {
       try {
         events.on('foo', invalid).then(function () {
           throw new Error("Should not allow adding invalid listener : " + invalid);
@@ -63,16 +63,14 @@ describe("Test adding and removing listeners", function () {
         e.message.should.equal('listener must be a function');
       }
 
-    })).then(function () {
-      done();
-    }).catch(done);
+    }));
   });
 
 
-  it("should not remove invalid listeners", function (done) {
+  it("should not remove invalid listeners", function () {
     var events = new Emitter();
 
-    Promise.all([undefined, null, false, true, -1, 0, 1, '', {}, [], /./].map(function (invalid) {
+    return Promise.all([undefined, null, false, true, -1, 0, 1, '', {}, [], /./].map(function (invalid) {
       try {
         events.removeListener('foo', invalid).then(function () {
           throw new Error("Should not allow removing invalid listener : " + invalid);
@@ -80,20 +78,18 @@ describe("Test adding and removing listeners", function () {
       } catch (e) {
         e.message.should.equal('listener must be a function');
       }
-    })).then(function () {
-      done();
-    }).catch(done);
+    }));
   });
 
 
 
-  it("should remove all listeners", function (done) {
+  it("should remove all listeners", function () {
     var events = new Emitter();
     var fn = function () {};
 
     this.timeout(1000);
 
-    Promise.all([
+    return Promise.all([
       events.on('foo', fn),
       events.on('foo', fn),
       events.on('foo', fn),
@@ -147,20 +143,20 @@ describe("Test adding and removing listeners", function () {
       }).then(function () {
         should(events._events).be.null;
         events._eventsCount.should.equal(0);
-      })
+      });
 
-    }).then(done).catch(done);
+    });
   });
 
 
-  it("should handle emitted errors", function (done) {
+  it("should handle emitted errors", function () {
     var events = new Emitter();
 
-    events.on('foo', function () {
+    return events.on('foo', function () {
       throw new Error('Test');
     }).then(function () {
 
-      Promise.all([
+      return Promise.all([
         events.emit('foo').then(function () {
           throw new Error('Failed test');
         }, function (err) {
@@ -186,9 +182,7 @@ describe("Test adding and removing listeners", function () {
         }, function (err) {
           err.message.should.equal('Test');
         })
-      ]).then(function () {
-        done();
-      }).catch(done);
+      ]);
 
     });
 
