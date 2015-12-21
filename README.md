@@ -13,12 +13,12 @@ The emitter can work either synchronously or asynchrnously. However, all events 
 ### Usage
 
 
-```
+```javascript
 const EventEmitter = require('promise-events');
 
 var events = new EventEmitter();
 
-// synchrnous
+// synchronous
 events.on('syncEvent', function (hello) {
   console.log(hello);
 });
@@ -41,13 +41,13 @@ Promise.all([
 
   events.emit('asyncEvent', 'Hello async!').then(function (results) {
     console.log(results);
-    // results = [ 'Bye!' ]
+    // results = [ 'Bye!', undefined ]
   });
 
 });
 ```
 
-All listeners are executed using [`Promise.all`](https://people.mozilla.org/~jorendorff/es6-draft.html#sec-promise.all), and empty results (listeners returning no result or `undefined`) are filtered out. This can be overridden by `events.setResultFilter(filter)`to specify a custom filter or `events.setResultFilter(null)` in order to return all return values, even empty ones. The order of the items in `results` is undefined. Therefore, the number of listeners and the order they are added to the emitter does not garantee the order or number of values returned when emitting an event; do not rely on `results` to determine a listener's return value.
+All listeners are executed using [`Promise.all`](https://people.mozilla.org/~jorendorff/es6-draft.html#sec-promise.all). You can specify a filter function for the array of return values using `events.setResultFilter(filter)` (resp. `events.getResultFilter()` and `EventEmitter.defaultResultFilter`, analogous to `EventEmitter.defaultMaxListeners`). The order of the items in `results` is undefined. Therefore, the number of listeners and the order they are added to the emitter does not garantee the order or number of values returned when emitting an event; do not rely on `results` to determine a listener's return value.
 
 A call to `events.emit` will always resolve with an array if successful or be rejected with a single `Error` upon any failure, at any given time, for any number of listeners (i.e. the first error thrown will be passed to the rejection callback and all subsequent will be ignored).
 

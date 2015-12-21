@@ -19,7 +19,7 @@ const EventEmitter = module.exports = class EventEmitter {
       this._eventsCount = 0;
     }
     this._maxListeners = this._maxListeners || undefined;
-    this._resultFilter = noValue;
+    this._resultFilter = this._resultFilter || undefined;
   }
 
 
@@ -34,19 +34,12 @@ const EventEmitter = module.exports = class EventEmitter {
     return this;
   }
   
+  getResultFilter() {
+    return this.resultFilter;
+  }
+  
   setResultFilter(filter) {
-    // allow a 'null' filter for accepting any result
-    if (filter === null) {
-      filter = function() {
-        return true;
-      }
-    }
-    
-    if (typeof filter !== 'function') {
-      throw new TypeError('filter must be a function');
-    }
-    
-    this._resultFilter = filter;
+    this.resultFilter = filter;
     
     return this;
   }
@@ -64,7 +57,18 @@ const EventEmitter = module.exports = class EventEmitter {
 
     this._maxListeners = n;
   }
-
+  
+  get resultFilter() {
+    return this._resultFilter || EventEmitter.defaultResultFilter;
+  }
+  
+  set resultFilter(filter) {
+    if (filter && typeof filter !== 'function') {
+      throw new TypeError('filter must be a function');
+    }
+    
+    this._resultFilter = filter;
+  }
 
   emit(type) {
     let er, handlers, len, args, events, domain;
@@ -191,8 +195,13 @@ const EventEmitter = module.exports = class EventEmitter {
     // keep a reference to _resultFilter since the filter function
     // could theoretically set a new result filter, leading to
     // undefined results
-    const resultFilter = this._resultFilter;
+    const resultFilter = this.getResultFilter();
 
+    if (!resultFilter) {
+      // unfiltered version
+      return promise;
+    }
+    
     return promise.then(function(results) {
       return results.filter(resultFilter);
     });
@@ -433,6 +442,7 @@ const EventEmitter = module.exports = class EventEmitter {
 EventEmitter.EventEmitter = EventEmitter;
 
 EventEmitter.defaultMaxListeners = 10;
+EventEmitter.defaultResultFilter = undefined;
 EventEmitter.usingDomains = true;
 EventEmitter.listenerCount = listenerCount;
 
@@ -456,9 +466,4 @@ function listenerCount(emitter, type) {
     }
   }
   return ret;
-}
-
-
-function noValue(item) {
-  return item !== undefined;
 }

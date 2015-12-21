@@ -64,14 +64,14 @@ describe("Test emitting events", function () {
       return events.addListener('foo', fn).then(function () {
         return events.emit('foo').then(function (results) {
 
-          results.should.be.an.instanceOf(Array).and.have.lengthOf(0);
+          results.should.be.an.instanceOf(Array).and.have.lengthOf(1);
 
           Emitter.listenerCount(events, 'foo').should.equal(1);
 
           return events.on('foo', fn).then(function () {
             return events.emit('foo').then(function (results) {
 
-              results.should.be.an.instanceOf(Array).and.have.lengthOf(0);
+              results.should.be.an.instanceOf(Array).and.have.lengthOf(2);
 
               events.listeners('foo').should.be.an.instanceOf(Array).and.have.lengthOf(2);
               Emitter.listenerCount(events, 'foo').should.equal(2);
@@ -334,7 +334,7 @@ describe("Test emitting events", function () {
 
         return events.emit('foo').then(function (results) {
 
-          results.should.be.an.instanceOf(Array).and.have.lengthOf(0);
+          results.should.be.an.instanceOf(Array).and.have.lengthOf(1);
 
           events._events.should.not.have.ownProperty('foo');
 
@@ -343,7 +343,7 @@ describe("Test emitting events", function () {
 
             return events.emit('foo').then(function (results) {
 
-              results.should.be.an.instanceOf(Array).and.have.lengthOf(0);
+              results.should.be.an.instanceOf(Array).and.have.lengthOf(2);
 
               events._events.should.not.have.ownProperty('foo');
             });
@@ -610,7 +610,7 @@ describe("Test emitting events", function () {
 
   describe('Filtering the listener return values', function () {
     
-    it('should filter out undefined results by default', function () {
+    it('should not filter out undefined results by default', function () {
       let events = new Emitter();
       
       return Promise.all([
@@ -619,7 +619,7 @@ describe("Test emitting events", function () {
         events.on('foo', function() { return 2; }),
       ]).then(function() {
         return events.emit('foo').then(function(results) {
-          results.sort().should.deepEqual([1, 2]);
+          results.sort().should.deepEqual([undefined, 1, 2].sort());
         });
       });
     });
@@ -645,10 +645,10 @@ describe("Test emitting events", function () {
       });
     });
     
-    it("should accept a custom 'null' filter", function() {
+    it("should accept a custom 'undefined' filter", function() {
       let events = new Emitter();
       
-      events.setResultFilter(null);
+      events.setResultFilter(undefined);
       
       return Promise.all([
         events.on('foo', function() { return undefined; }),
