@@ -30,4 +30,13 @@ describe("Test inheritance", function () {
 
   });
 
+
+  it('should be instance of built-in EventEmitter', function () {
+    const EventEmitter = require('events').EventEmitter;
+
+    let events = new Emitter();
+
+    events.should.be.instanceOf(EventEmitter);
+  });
+
 });

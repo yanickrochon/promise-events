@@ -11,6 +11,15 @@ const EventEmitter = module.exports = class EventEmitter extends events.EventEmi
   }
 
 
+  get maxListeners() {
+    return this.getMaxListeners();
+  }
+
+  set maxListeners(n) {
+    this.setMaxListeners(n);
+  }
+  
+
   getResultFilter() {
     return this.resultFilter;
   }
@@ -21,27 +30,18 @@ const EventEmitter = module.exports = class EventEmitter extends events.EventEmi
     return this;
   }
 
-
-  get maxListeners() {
-    return this.getMaxListeners();
-  }
-
-
-  set maxListeners(n) {
-    this.setMaxListeners(n);
-  }
-  
   get resultFilter() {
-    return this._resultFilter || EventEmitter.defaultResultFilter;
+    return this._resultFilter === undefined && EventEmitter.defaultResultFilter || this._resultFilter;
   }
   
   set resultFilter(filter) {
-    if (filter && typeof filter !== 'function') {
-      throw new TypeError('filter must be a function');
+    if (filter !== undefined && filter !== null && typeof filter !== 'function') {
+      throw new TypeError('Filter must be a function');
     }
     
     this._resultFilter = filter;
   }
+
 
   emit(type) {
     // keep a reference to _resultFilter since the filter function
@@ -243,14 +243,15 @@ const EventEmitter = module.exports = class EventEmitter extends events.EventEmi
     let fired = false;
 
     function g() {
+      // NOTE : this condition seems to be superfluous. There are no use case
+      //        currently proving that this function can be called recursively.
       if (!fired) {
         let args = arguments;
 
         fired = true;
+        emitter.removeListener(type, g); // ignore async return
 
-        return emitter.removeListener(type, g).then(() => {
-          return listener.apply(emitter, args);
-        });
+        return listener.apply(emitter, args);
       }
     };
 
@@ -381,7 +382,7 @@ const EventEmitter = module.exports = class EventEmitter extends events.EventEmi
       promise = this.removeListener(type, listeners);
     } else if (listeners) {
       // LIFO order
-      for (let i = listeners.length; i >= 0; --i) {
+      for (let i = listeners.length - 1; i >= 0; --i) {
         promise = promise && promise.then(this.removeListener(type, listeners[i])) || this.removeListener(type, listeners[i]);
       }
     }

@@ -1,13 +1,11 @@
 
 
 describe("Test adding and removing listeners", function () {
-
-  var Emitter = require('../emitter');
-  var should = require('should');
+  const Emitter = require('../emitter');
 
 
   it("should add and remove listeners", function () {
-    var events = new Emitter();
+    const events = new Emitter();
     var fn = function () {};
 
     this.timeout(1000);
@@ -44,7 +42,7 @@ describe("Test adding and removing listeners", function () {
 
 
   it("should not add invalid listeners", function () {
-    var events = new Emitter();
+    const events = new Emitter();
 
     return Promise.all([undefined, null, false, true, -1, 0, 1, '', {}, [], /./].map(function (invalid) {
       try {
@@ -67,8 +65,33 @@ describe("Test adding and removing listeners", function () {
   });
 
 
+  it('should not recursively call `once` events', function () {
+    const events = new Emitter();
+    var removeCount = 0;
+    var fooCount = 0;
+
+    return Promise.all([
+      events.once('removeListener', function () {
+        ++removeCount;
+        return events.emit('removeListener');  // try to call this event again
+      }),
+      events.once('foo', function () {
+        ++fooCount;
+        return events.emit('foo');  // try to call this event again
+      })
+    ]).then(function () {
+      return events.emit('foo').then(function () {
+        removeCount.should.equal(1);
+        fooCount.should.equal(1);
+
+        events._events.should.eql({});
+      });
+    });
+  });
+
+
   it("should not remove invalid listeners", function () {
-    var events = new Emitter();
+    const events = new Emitter();
 
     return Promise.all([undefined, null, false, true, -1, 0, 1, '', {}, [], /./].map(function (invalid) {
       try {
@@ -84,7 +107,7 @@ describe("Test adding and removing listeners", function () {
 
 
   it("should remove all listeners", function () {
-    var events = new Emitter();
+    const events = new Emitter();
     var fn = function () {};
 
     this.timeout(1000);
@@ -94,19 +117,30 @@ describe("Test adding and removing listeners", function () {
       events.on('foo', fn),
       events.on('foo', fn),
       events.on('bar', fn),
-      events.on('meh', fn)
+      events.on('bar', fn),
+      events.on('meh', fn),
+      events.on('meh', fn),
+      events.on('removeListener', fn)
     ]).then(function () {
 
       events._events.should.have.ownProperty('foo').and.be.instanceOf(Array).with.lengthOf(3);
-      events._events.should.have.ownProperty('bar').and.equal(fn);
-      events._events.should.have.ownProperty('meh').and.equal(fn);
+      events._events.should.have.ownProperty('bar').and.deepEqual([fn, fn]);
+      events._events.should.have.ownProperty('meh').and.deepEqual([fn, fn]);
 
       return events.removeAllListeners('foo').then(function () {
 
         events._events.should.not.have.ownProperty('foo');
-        events._events.should.have.ownProperty('bar').and.equal(fn);
-        events._events.should.have.ownProperty('meh').and.equal(fn);
-        events._eventsCount.should.equal(2);
+        events._events.should.have.ownProperty('bar').and.deepEqual([fn, fn]);
+        events._events.should.have.ownProperty('meh').and.deepEqual([fn, fn]);
+        events._events.should.have.ownProperty('removeListener').and.equal(fn);
+        events._eventsCount.should.equal(5);
+
+        return events.removeAllListeners('missingEvent');
+      }).then(function () {
+        events._events.should.have.ownProperty('bar').and.deepEqual([fn, fn]);
+        events._events.should.have.ownProperty('meh').and.deepEqual([fn, fn]);
+        events._events.should.have.ownProperty('removeListener').and.equal(fn);
+        events._eventsCount.should.equal(5);
 
         return events.removeAllListeners();
       }).then(function () {
@@ -141,7 +175,7 @@ describe("Test adding and removing listeners", function () {
 
         return events.removeAllListeners();
       }).then(function () {
-        should(events._events).be.null;
+        (null === events._events).should.be.true;
         events._eventsCount.should.equal(0);
       });
 
@@ -150,7 +184,7 @@ describe("Test adding and removing listeners", function () {
 
 
   it("should handle emitted errors", function () {
-    var events = new Emitter();
+    const events = new Emitter();
 
     return events.on('foo', function () {
       throw new Error('Test');

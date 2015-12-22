@@ -21,7 +21,7 @@ describe("Test resultFilter", function () {
     [
       true, 'foo', /./, 42, {}, [], -1
     ].forEach(function (n) {
-      !function () { events.resultFilter = n; }.should.throw('filter must be a function');
+      !function () { events.resultFilter = n; }.should.throw('Filter must be a function');
     });
   });
 
@@ -41,5 +41,70 @@ describe("Test resultFilter", function () {
     Emitter.defaultMaxListeners = undefined;
     (typeof Emitter.defaultMaxListeners).should.equal('undefined');
     (typeof events.maxListeners).should.equal('undefined');
+  });
+
+  
+  describe('Filtering the listener return values', function () {
+    
+    it('should not filter out undefined results by default', function () {
+      let events = new Emitter();
+      
+      return Promise.all([
+        events.on('foo', function() { return undefined; }),
+        events.on('foo', function() { return 1; }),
+        events.on('foo', function() { return 2; }),
+      ]).then(function() {
+        return events.emit('foo').then(function(results) {
+          results.sort().should.deepEqual([undefined, 1, 2].sort());
+        });
+      });
+    });
+
+    it('should accept custom result filters', function() {
+      let events = new Emitter();
+      
+      function filter(value) {
+        return value !== 2;
+      }
+      
+      events.setResultFilter(filter);
+      events._resultFilter.should.equal(filter);
+      
+      return Promise.all([
+        events.on('foo', function() { return undefined; }),
+        events.on('foo', function() { return 1; }),
+        events.on('foo', function() { return 2; }),
+      ]).then(function() {
+        return events.emit('foo').then(function(results) {
+          results.sort().should.deepEqual([undefined, 1].sort());
+        });
+      });
+    });
+    
+    it("should accept a custom 'undefined' filter", function() {
+      let events = new Emitter();
+      
+      events.setResultFilter(undefined);
+      
+      return Promise.all([
+        events.on('foo', function() { return undefined; }),
+        events.on('foo', function() { return 1; }),
+        events.on('foo', function() { return 2; }),
+      ]).then(function() {
+        return events.emit('foo').then(function(results) {
+          results.sort().should.deepEqual([undefined, 1, 2].sort());
+        });
+      });
+    });
+    
+    it('should throw when adding invalid filters', function() {
+      let events = new Emitter();
+      
+      try {
+        events.setResultFilter(42);
+      } catch (err) {
+        err.should.be.instanceOf(Error).and.have.ownProperty('message').equal('Filter must be a function');
+      }
+    });
   });
 });
