@@ -5,13 +5,14 @@
 
 [![NPM](https://nodei.co/npm/promise-events.png?compact=true)](https://nodei.co/npm/promise-events/)
 
-An asynchronous event listener for Promise/A+ implementations. This module implements a compatible `EventEmitter` interface, where all functions return a promise for easy workflow.
+An asynchronous event listener for Promise/A+ implementations. This module inherits Node's built-in `EventEmitter` interface, except that selected methods are overridden to return a promise for easy workflow.
 
-The emitter can work either synchronously or asynchrnously. However, all events are fired asynchronously.
+In essence, replacing existing code with this emitter should have no impact whatsoever, added that this emitter can work either synchronously or asynchrnously, except that *all* events are fired asynchronously. 
+
+**NOTE:** Modules that expect event emitting to be synchronous should be refactored to wait for the promise resolution instead.
 
 
 ### Usage
-
 
 ```javascript
 const EventEmitter = require('promise-events');

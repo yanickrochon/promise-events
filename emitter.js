@@ -1,39 +1,16 @@
-
 'use strict';
 
+const events = require('events');
 
-var domain;
 
-
-const EventEmitter = module.exports = class EventEmitter {
+const EventEmitter = module.exports = class EventEmitter extends events.EventEmitter {
   constructor() {
-    if (EventEmitter.usingDomains) {
-      // if there is an active domain, then attach to it.
-      domain = domain || require('domain');
-      if (domain.active && !(this instanceof domain.Domain)) {
-        this.domain = domain.active;
-      }
-    }
-    if (!this._events || this._events === Object.getPrototypeOf(this)._events) {
-      this._events = {};
-      this._eventsCount = 0;
-    }
-    this._maxListeners = this._maxListeners || undefined;
+    super();
+
     this._resultFilter = this._resultFilter || undefined;
   }
 
 
-  getMaxListeners() {
-    return this.maxListeners;
-  }
-
-
-  setMaxListeners(n) {
-    this.maxListeners = n;
-
-    return this;
-  }
-  
   getResultFilter() {
     return this.resultFilter;
   }
@@ -46,16 +23,12 @@ const EventEmitter = module.exports = class EventEmitter {
 
 
   get maxListeners() {
-    return this._maxListeners || EventEmitter.defaultMaxListeners;
+    return this.getMaxListeners();
   }
 
 
   set maxListeners(n) {
-    if (typeof n !== 'number' || n < 0 || isNaN(n)) {
-      throw new TypeError('n must be a positive number');
-    }
-
-    this._maxListeners = n;
+    this.setMaxListeners(n);
   }
   
   get resultFilter() {
@@ -71,6 +44,10 @@ const EventEmitter = module.exports = class EventEmitter {
   }
 
   emit(type) {
+    // keep a reference to _resultFilter since the filter function
+    // could theoretically set a new result filter, leading to
+    // undefined results
+    const resultFilter = this.getResultFilter();
     let er, handlers, len, args, events, domain;
     let needDomainExit = false;
     let doError = (type === 'error');
@@ -192,11 +169,6 @@ const EventEmitter = module.exports = class EventEmitter {
       });
     }
     
-    // keep a reference to _resultFilter since the filter function
-    // could theoretically set a new result filter, leading to
-    // undefined results
-    const resultFilter = this.getResultFilter();
-
     if (!resultFilter) {
       // unfiltered version
       return promise;
@@ -417,53 +389,30 @@ const EventEmitter = module.exports = class EventEmitter {
     return promise || Promise.resolve();
   }
 
-
-  listeners(type) {
-    let evlistener;
-    let ret;
-    let events = this._events;
-
-    evlistener = events && events[type];
-
-    if (!evlistener) {
-      ret = [];
-    } else if (typeof evlistener === 'function') {
-      ret = [evlistener];
-    } else {
-      ret = evlistener.slice();
-    }
-
-    return ret;
-  }
-
 }
 
 
 EventEmitter.EventEmitter = EventEmitter;
 
-EventEmitter.defaultMaxListeners = 10;
-EventEmitter.defaultResultFilter = undefined;
-EventEmitter.usingDomains = true;
-EventEmitter.listenerCount = listenerCount;
-
-EventEmitter.prototype.domain = undefined;
-EventEmitter.prototype._events = undefined;
-EventEmitter.prototype._maxListeners = undefined;
-EventEmitter.prototype.on = EventEmitter.prototype.addListener;
-
-
-function listenerCount(emitter, type) {
-  let evlistener;
-  let ret = 0;
-  let events = emitter._events;
-
-  if (events) {
-    evlistener = events[type];
-    if (typeof evlistener === 'function') {
-      ret = 1;
-    } else if (evlistener) {
-      ret = evlistener.length;
+Object.defineProperties(EventEmitter, {
+  defaultMaxListeners: {
+    get: function getDefaultMaxListeners() {
+      return events.EventEmitter.defaultMaxListeners;
+    },
+    set: function setDefaultMaxListeners(n) {
+      events.EventEmitter.defaultMaxListeners = n;
+    }
+  },
+  usingDomains: {
+    get: function getUsingDomains() {
+      return events.EventEmitter.usingDomains;
+    },
+    set: function setUsingDomains(b) {
+      events.EventEmitter.usingDomains = b;
     }
   }
-  return ret;
-}
+});
+
+EventEmitter.defaultResultFilter = undefined;
+EventEmitter.prototype.on = EventEmitter.prototype.addListener;
+

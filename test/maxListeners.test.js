@@ -35,11 +35,11 @@ describe("Test maxListeners", function () {
     Emitter.defaultMaxListeners = 10;
     Emitter.defaultMaxListeners.should.equal(10);
 
-    events.maxListeners = 0;
     events.maxListeners.should.equal(Emitter.defaultMaxListeners);
 
     Emitter.defaultMaxListeners = 0;
     Emitter.defaultMaxListeners.should.equal(0);
+    events.getMaxListeners().should.equal(0);
     events.maxListeners.should.equal(0);
 
     for (let i = 1; i < 100; ++i) {
