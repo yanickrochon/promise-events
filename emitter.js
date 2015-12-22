@@ -415,4 +415,4 @@ Object.defineProperties(EventEmitter, {
 
 EventEmitter.defaultResultFilter = undefined;
 EventEmitter.prototype.on = EventEmitter.prototype.addListener;
-
+EventEmitter.prototype._resultFilter = undefined;
