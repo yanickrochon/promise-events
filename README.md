@@ -52,6 +52,15 @@ All listeners are executed using [`Promise.all`](https://people.mozilla.org/~jor
 
 A call to `events.emit` will always resolve with an array if successful or be rejected with a single `Error` upon any failure, at any given time, for any number of listeners (i.e. the first error thrown will be passed to the rejection callback and all subsequent will be ignored).
 
+This module also provides a sugar overload of `.once()` for a Promise-based version of `.once()`:
+
+```javascript
+// nearly equivalent to events.once('foo', () => console.log('foo!'));
+events.once('foo').then(() => console.log('foo!'));
+
+events.emit('foo'); // writes "foo!" to the console
+events.emit('foo'); // does nothing
+```
 
 ## Contribution
 

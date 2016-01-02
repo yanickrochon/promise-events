@@ -541,7 +541,16 @@ describe("Test emitting events", function () {
         });
       });
     });
-
+    
+    it('should resolve promises created by .once(type)', function() {
+      let events = new Emitter();
+      
+      return new Promise((resolve, reject) => {
+        events.once('foo').then(resolve, reject);
+        
+        events.emit('foo').catch(reject);
+      });
+    });
   });
 
 
