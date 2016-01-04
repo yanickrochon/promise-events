@@ -22,7 +22,7 @@ describe("Test maxListeners", function () {
     [
       undefined, null, false, true, '', 'foo', /./, function () {}, {}, [], -1, NaN
     ].forEach(function (n) {
-      !function () { events.maxListeners = n; }.should.throw('n must be a positive number');
+      !function () { events.maxListeners = n; }.should.throw(/must be a positive number/);
     });
   });
 
