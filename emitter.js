@@ -18,27 +18,27 @@ const EventEmitter = module.exports = class EventEmitter extends events.EventEmi
   set maxListeners(n) {
     this.setMaxListeners(n);
   }
-  
+
 
   getResultFilter() {
     return this.resultFilter;
   }
-  
+
   setResultFilter(filter) {
     this.resultFilter = filter;
-    
+
     return this;
   }
 
   get resultFilter() {
     return this._resultFilter === undefined && EventEmitter.defaultResultFilter || this._resultFilter;
   }
-  
+
   set resultFilter(filter) {
     if (filter !== undefined && filter !== null && typeof filter !== 'function') {
       throw new TypeError('Filter must be a function');
     }
-    
+
     this._resultFilter = filter;
   }
 
@@ -168,12 +168,12 @@ const EventEmitter = module.exports = class EventEmitter extends events.EventEmi
         domain.exit();
       });
     }
-    
+
     if (!resultFilter) {
       // unfiltered version
       return promise;
     }
-    
+
     return promise.then(function(results) {
       return results.filter(resultFilter);
     });
@@ -238,7 +238,7 @@ const EventEmitter = module.exports = class EventEmitter extends events.EventEmi
     if (arguments.length === 1) {
       // return a Promise instance when no callback is given
       const deferred = Promise.defer();
-      
+
       return this.once(type, v => deferred.resolve(v)).then(() => deferred.promise);
     } else {
       if (typeof listener !== 'function') {
@@ -255,9 +255,10 @@ const EventEmitter = module.exports = class EventEmitter extends events.EventEmi
           let args = arguments;
 
           fired = true;
-          emitter.removeListener(type, g); // ignore async return
 
-          return listener.apply(emitter, args);
+          return emitter.removeListener(type, g).then(function () {
+            return listener.apply(emitter, args);
+          });
         }
       };
 

@@ -17,6 +17,6 @@ describe("Test domains", function () {
     Emitter.usingDomains.should.be.false;
 
     Emitter.usingDomains = originalValue;
-  })
+  });
 
 });

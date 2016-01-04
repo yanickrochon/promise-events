@@ -65,6 +65,26 @@ describe("Test adding and removing listeners", function () {
   });
 
 
+  it('should not recursively call `once` events (from Node test case)', function () {
+    const events = new Emitter();
+    var times_recurse_emitted = 0;
+
+    events.once('e', function() {
+      return events.emit('e').then(function () {
+        times_recurse_emitted++;
+      });
+    });
+
+    events.once('e', function() {
+      times_recurse_emitted++;
+    });
+
+    return events.emit('e').then(function () {
+      times_recurse_emitted.should.equal(2);
+    });
+  });
+
+
   it('should not recursively call `once` events', function () {
     const events = new Emitter();
     var removeCount = 0;
@@ -87,6 +107,71 @@ describe("Test adding and removing listeners", function () {
         events._events.should.eql({});
       });
     });
+  });
+
+
+  it('should fire only `once` (async)', function () {
+    const events = new Emitter();
+    var times_hello_emited = 0;
+
+    return events.once('hello', function(a, b) {
+      times_hello_emited++;
+    }).then(function () {
+      return Promise.all([
+        events.emit('hello', 'a', 'b'),
+        events.emit('hello', 'a', 'b'),
+        events.emit('hello', 'a', 'b'),
+        events.emit('hello', 'a', 'b')
+      ]).then(function () {
+        times_hello_emited.should.equal(1);
+      });
+    });
+  });
+
+
+  it('should fire only `once` (sync)', function () {
+    const events = new Emitter();
+    var times_hello_emited = 0;
+
+    events.once('hello', function(a, b) {
+      times_hello_emited++;
+    });
+
+    return Promise.all([
+      events.emit('hello', 'a', 'b'),
+      events.emit('hello', 'a', 'b'),
+      events.emit('hello', 'a', 'b'),
+      events.emit('hello', 'a', 'b')
+    ]).then(function () {
+      times_hello_emited.should.equal(1);
+    });
+  });
+
+
+  it('should not fire `once` if removed first (async)', function () {
+    const events = new Emitter();
+    const remove = function() {
+      throw new Error('once->foo should not be emitted!');
+    };
+
+    return events.once('foo', remove).then(function () {
+      return events.removeListener('foo', remove);
+    }).then(function () {
+      return events.emit('foo');
+    });
+  });
+
+
+  it('should not fire `once` if removed first (sync)', function () {
+    const events = new Emitter();
+    const remove = function() {
+      throw new Error('once->foo should not be emitted!');
+    };
+
+    events.once('foo', remove);
+    events.removeListener('foo', remove);
+
+    return events.emit('foo');
   });
 
 
