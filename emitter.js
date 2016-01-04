@@ -235,31 +235,37 @@ const EventEmitter = module.exports = class EventEmitter extends events.EventEmi
 
 
   once(type, listener) {
-    if (typeof listener !== 'function') {
-      throw new TypeError('listener must be a function');
-    }
-
-    const emitter = this;
-    let fired = false;
-
-    function g() {
-      // NOTE : this condition seems to be superfluous. There are no use case
-      //        currently proving that this function can be called recursively.
-      if (!fired) {
-        let args = arguments;
-
-        fired = true;
-        emitter.removeListener(type, g); // ignore async return
-
-        return listener.apply(emitter, args);
+    if (arguments.length === 1) {
+      // return a Promise instance when no callback is given
+      const deferred = Promise.defer();
+      
+      return this.once(type, v => deferred.resolve(v)).then(() => deferred.promise);
+    } else {
+      if (typeof listener !== 'function') {
+        throw new TypeError('listener must be a function');
       }
-    };
 
-    g.listener = listener;
+      const emitter = this;
+      let fired = false;
 
-    return this.on(type, g);
+      function g() {
+        // NOTE : this condition seems to be superfluous. There are no use case
+        //        currently proving that this function can be called recursively.
+        if (!fired) {
+          let args = arguments;
+
+          fired = true;
+          emitter.removeListener(type, g); // ignore async return
+
+          return listener.apply(emitter, args);
+        }
+      };
+
+      g.listener = listener;
+
+      return this.on(type, g);
+    }
   }
-
 
   removeListener(type, listener) {
     let list, events, position;
