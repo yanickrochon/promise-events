@@ -249,8 +249,6 @@ const EventEmitter = module.exports = class EventEmitter extends events.EventEmi
       let fired = false;
 
       function g() {
-        // NOTE : this condition seems to be superfluous. There are no use case
-        //        currently proving that this function can be called recursively.
         if (!fired) {
           let args = arguments;
 

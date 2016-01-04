@@ -27,8 +27,8 @@ describe("Test resultFilter", function () {
 
 
   it('should reciprocate', function () {
-    let events = new Emitter();
-    
+    const events = new Emitter();
+
     (typeof events.getResultFilter()).should.equal('undefined');
 
     const exampleFilter = function() { return true; };
@@ -43,12 +43,12 @@ describe("Test resultFilter", function () {
     (typeof events.maxListeners).should.equal('undefined');
   });
 
-  
+
   describe('Filtering the listener return values', function () {
-    
+
     it('should not filter out undefined results by default', function () {
-      let events = new Emitter();
-      
+      const events = new Emitter();
+
       return Promise.all([
         events.on('foo', function() { return undefined; }),
         events.on('foo', function() { return 1; }),
@@ -61,15 +61,15 @@ describe("Test resultFilter", function () {
     });
 
     it('should accept custom result filters', function() {
-      let events = new Emitter();
-      
+      const events = new Emitter();
+
       function filter(value) {
         return value !== 2;
       }
-      
+
       events.setResultFilter(filter);
       events._resultFilter.should.equal(filter);
-      
+
       return Promise.all([
         events.on('foo', function() { return undefined; }),
         events.on('foo', function() { return 1; }),
@@ -80,12 +80,12 @@ describe("Test resultFilter", function () {
         });
       });
     });
-    
+
     it("should accept a custom 'undefined' filter", function() {
-      let events = new Emitter();
-      
+      const events = new Emitter();
+
       events.setResultFilter(undefined);
-      
+
       return Promise.all([
         events.on('foo', function() { return undefined; }),
         events.on('foo', function() { return 1; }),
@@ -96,10 +96,10 @@ describe("Test resultFilter", function () {
         });
       });
     });
-    
+
     it('should throw when adding invalid filters', function() {
-      let events = new Emitter();
-      
+      const events = new Emitter();
+
       try {
         events.setResultFilter(42);
       } catch (err) {

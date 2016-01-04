@@ -50,11 +50,11 @@ describe("Test maxListeners", function () {
 
 
   it("should detect memory leak", function () {
-    var events = new Emitter();
-    var _error = console.error;
-    var _trace = console.trace;
-    var errorCount = 0;
-    var traceCount = 0;
+    const events = new Emitter();
+    const _error = console.error;
+    const _trace = console.trace;
+    let errorCount = 0;
+    let traceCount = 0;
 
     console.error = function () {
       ++errorCount;

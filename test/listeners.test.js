@@ -1,4 +1,4 @@
-
+'use strict';
 
 describe("Test adding and removing listeners", function () {
   const Emitter = require('../emitter');
@@ -6,7 +6,7 @@ describe("Test adding and removing listeners", function () {
 
   it("should add and remove listeners", function () {
     const events = new Emitter();
-    var fn = function () {};
+    let fn = function () {};
 
     this.timeout(1000);
 
@@ -67,9 +67,15 @@ describe("Test adding and removing listeners", function () {
 
   it('should not recursively call `once` events (from Node test case)', function () {
     const events = new Emitter();
-    var times_recurse_emitted = 0;
+    let times_recurse_emitted = 0;
+    let emittedExtraEvent = false;
 
-    events.once('e', function() {
+    events.on('e', function() {
+      if (emittedExtraEvent) {
+        return; // avoid infinite recursion, basically imitate .once()
+      }
+
+      emittedExtraEvent = true;
       return events.emit('e').then(function () {
         times_recurse_emitted++;
       });
@@ -87,8 +93,8 @@ describe("Test adding and removing listeners", function () {
 
   it('should not recursively call `once` events', function () {
     const events = new Emitter();
-    var removeCount = 0;
-    var fooCount = 0;
+    let removeCount = 0;
+    let fooCount = 0;
 
     return Promise.all([
       events.once('removeListener', function () {
@@ -112,7 +118,7 @@ describe("Test adding and removing listeners", function () {
 
   it('should fire only `once` (async)', function () {
     const events = new Emitter();
-    var times_hello_emited = 0;
+    let times_hello_emited = 0;
 
     return events.once('hello', function(a, b) {
       times_hello_emited++;
@@ -131,7 +137,7 @@ describe("Test adding and removing listeners", function () {
 
   it('should fire only `once` (sync)', function () {
     const events = new Emitter();
-    var times_hello_emited = 0;
+    let times_hello_emited = 0;
 
     events.once('hello', function(a, b) {
       times_hello_emited++;
@@ -193,7 +199,7 @@ describe("Test adding and removing listeners", function () {
 
   it("should remove all listeners", function () {
     const events = new Emitter();
-    var fn = function () {};
+    let fn = function () {};
 
     this.timeout(1000);
 
