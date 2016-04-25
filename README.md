@@ -48,18 +48,23 @@ Promise.all([
 });
 ```
 
-All listeners are executed using [`Promise.all`](https://people.mozilla.org/~jorendorff/es6-draft.html#sec-promise.all). You can specify a filter function for the array of return values using `events.setResultFilter(filter)` (resp. `events.getResultFilter()` and `EventEmitter.defaultResultFilter`, analogous to `EventEmitter.defaultMaxListeners`). The order of the items in `results` is undefined. Therefore, the number of listeners and the order they are added to the emitter does not garantee the order or number of values returned when emitting an event; do not rely on `results` to determine a listener's return value.
+All listeners are executed using [`Promise.all`](https://people.mozilla.org/~jorendorff/es6-draft.html#sec-promise.all). If necessary, you may specify a filter function for the array of return values using `events.setResultFilter(filter)` (resp. `events.getResultFilter()` and `EventEmitter.defaultResultFilter`, analogous to `EventEmitter.defaultMaxListeners`). The order of the items in `results` is undefined. Therefore, the number of listeners and the order they are added to the emitter does not garantee the order or number of values returned when emitting an event; do not rely on `results` to determine a listener's return value.
 
 A call to `events.emit` will always resolve with an array if successful or be rejected with a single `Error` upon any failure, at any given time, for any number of listeners (i.e. the first error thrown will be passed to the rejection callback and all subsequent will be ignored).
 
-This module also provides a sugar overload of `.once()` for a Promise-based version of `.once()`:
+This module also provides a sugar overload of `.once()` for a Promise-based version of `.once()` which will guarantee to be called *after* all listeners have been fired, regardless when the listeners were added.
 
 ```javascript
 // nearly equivalent to events.once('foo', () => console.log('foo!'));
-events.once('foo').then(() => console.log('foo!'));
+events.once('foo').then(() => console.log('Done!'));
 
-events.emit('foo'); // writes "foo!" to the console
-events.emit('foo'); // does nothing
+events.on('foo', () => console.log('foo'));
+
+events.emit('foo');
+// => foo
+// => Done!
+events.emit('foo');
+// => foo
 ```
 
 ## Contribution

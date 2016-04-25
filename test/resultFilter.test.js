@@ -50,11 +50,11 @@ describe("Test resultFilter", function () {
       const events = new Emitter();
 
       return Promise.all([
-        events.on('foo', function() { return undefined; }),
-        events.on('foo', function() { return 1; }),
-        events.on('foo', function() { return 2; }),
+        events.on('foo', () => { return undefined; }),
+        events.on('foo', () => { return 1; }),
+        events.on('foo', () => { return 2; }),
       ]).then(function() {
-        return events.emit('foo').then(function(results) {
+        return events.emit('foo').then((results) => {
           results.sort().should.deepEqual([undefined, 1, 2].sort());
         });
       });
@@ -71,11 +71,11 @@ describe("Test resultFilter", function () {
       events._resultFilter.should.equal(filter);
 
       return Promise.all([
-        events.on('foo', function() { return undefined; }),
-        events.on('foo', function() { return 1; }),
-        events.on('foo', function() { return 2; }),
+        events.on('foo', () => { return undefined; }),
+        events.on('foo', () => { return 1; }),
+        events.on('foo', () => { return 2; }),
       ]).then(function() {
-        return events.emit('foo').then(function(results) {
+        return events.emit('foo').then((results) => {
           results.sort().should.deepEqual([undefined, 1].sort());
         });
       });
@@ -87,11 +87,11 @@ describe("Test resultFilter", function () {
       events.setResultFilter(undefined);
 
       return Promise.all([
-        events.on('foo', function() { return undefined; }),
-        events.on('foo', function() { return 1; }),
-        events.on('foo', function() { return 2; }),
+        events.on('foo', () => { return undefined; }),
+        events.on('foo', () => { return 1; }),
+        events.on('foo', () => { return 2; }),
       ]).then(function() {
-        return events.emit('foo').then(function(results) {
+        return events.emit('foo').then((results) => {
           results.sort().should.deepEqual([undefined, 1, 2].sort());
         });
       });

@@ -181,58 +181,12 @@ const EventEmitter = module.exports = class EventEmitter extends events.EventEmi
 
 
   addListener(type, listener) {
-    let m;
-    let events;
-    let existing;
-    let promise;
-
-    if (typeof listener !== 'function') {
-      throw new TypeError('listener must be a function');
-    }
-
-    events = this._events;
-
-    if (!events) {
-      events = this._events = {};
-      this._eventsCount = 0;
-    } else {
-      // To avoid recursion in the case that type === "newListener"! Before
-      // adding it to the listeners, first emit "newListener".
-      if (events.newListener) {
-        promise = this.emit('newListener', type, listener.listener ? listener.listener : listener);
-      }
-      existing = events[type];
-    }
-
-    if (!existing) {
-      // Optimize the case of one listener. Don\'t need the extra array object.
-      existing = events[type] = listener;
-    } else {
-      if (typeof existing === 'function') {
-        // Adding the second element, need to change to array.
-        existing = events[type] = [existing, listener];
-      } else {
-        // If we've already got an array, just append.
-        existing.push(listener);
-      }
-      // Check for listener leak
-      if (!existing.warned) {
-        m = this.maxListeners;
-        if (m && m > 0 && existing.length > m) {
-          existing.warned = true;
-          console.error('warning: possible EventEmitter memory ' +
-                        'leak detected. %d %s listeners added. ' +
-                        'Use emitter.setMaxListeners() to increase limit.',
-                        existing.length, type);
-          console.trace();
-        }
-      }
-    }
-    ++this._eventsCount;
-
-    return promise || Promise.resolve();
+    return _addListener(this, type, listener, false);
   }
 
+  prependListener(type, listener) {
+    return _addListener(this, type, listener, true);
+  }
 
   once(type, listener) {
     if (arguments.length === 1) {
@@ -245,26 +199,18 @@ const EventEmitter = module.exports = class EventEmitter extends events.EventEmi
         throw new TypeError('listener must be a function');
       }
 
-      const emitter = this;
-      let fired = false;
-
-      function g() {
-        if (!fired) {
-          let args = arguments;
-
-          fired = true;
-
-          return emitter.removeListener(type, g).then(function () {
-            return listener.apply(emitter, args);
-          });
-        }
-      };
-
-      g.listener = listener;
-
-      return this.on(type, g);
+      return this.addListener(type, _onceWrap(this, type, listener));
     }
   }
+
+  prependOnceListener(type, listener) {
+   if (typeof listener !== 'function') {
+     throw new TypeError('"listener" argument must be a function');
+   }
+
+   this.prependListener(type, _onceWrap(this, type, listener));
+   return this;
+ }
 
   removeListener(type, listener) {
     let list, events, position;
@@ -422,3 +368,77 @@ Object.defineProperties(EventEmitter, {
 EventEmitter.defaultResultFilter = undefined;
 EventEmitter.prototype.on = EventEmitter.prototype.addListener;
 EventEmitter.prototype._resultFilter = undefined;
+
+
+function _addListener(target, type, listener, prepend) {
+  let m;
+  let events;
+  let existing;
+  let promise;
+
+  if (typeof listener !== 'function') {
+    throw new TypeError('listener must be a function');
+  }
+
+  events = target._events;
+
+  if (!events) {
+    events = target._events = {};
+    target._eventsCount = 0;
+  } else {
+    // To avoid recursion in the case that type === "newListener"! Before
+    // adding it to the listeners, first emit "newListener".
+    if (events.newListener) {
+      promise = target.emit('newListener', type, listener.listener ? listener.listener : listener);
+    }
+    existing = events[type];
+  }
+
+  if (!existing) {
+    // Optimize the case of one listener. Don\'t need the extra array object.
+    existing = events[type] = listener;
+  } else {
+    if (typeof existing === 'function') {
+      // Adding the second element, need to change to array.
+      existing = events[type] = [existing, listener];
+    } else {
+      // If we've already got an array, just append.
+      existing.push(listener);
+    }
+    // Check for listener leak
+    if (!existing.warned) {
+      m = target.maxListeners;
+      if (m && m > 0 && existing.length > m) {
+        existing.warned = true;
+        console.error('warning: possible EventEmitter memory ' +
+                      'leak detected. %d %s listeners added. ' +
+                      'Use emitter.setMaxListeners() to increase limit.',
+                      existing.length, type);
+        console.trace();
+      }
+    }
+  }
+  ++target._eventsCount;
+
+  return promise || Promise.resolve();
+}
+
+function _onceWrap(target, type, listener) {
+  let fired = false;
+
+  function g() {
+    if (!fired) {
+      let args = arguments;
+
+      fired = true;
+
+      return target.removeListener(type, g).then(function () {
+        return listener.apply(target, args);
+      });
+    }
+  };
+
+  g.listener = listener;
+
+  return g;
+}

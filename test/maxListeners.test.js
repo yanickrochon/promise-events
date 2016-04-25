@@ -67,7 +67,7 @@ describe("Test maxListeners", function () {
 
     for (var i = 0; i < events.maxListeners + 2; ++i) {
       events.listeners('test').length.should.equal(i);
-      events.on('test', function () {});
+      events.on('test', () => {});
     }
 
     events.listeners('test').length.should.equal(events.maxListeners + 2);
