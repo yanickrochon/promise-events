@@ -196,7 +196,7 @@ const EventEmitter = module.exports = class EventEmitter extends events.EventEmi
       return this.once(type, v => deferred.resolve(v)).then(() => deferred.promise);
     } else {
       if (typeof listener !== 'function') {
-        throw new TypeError('listener must be a function');
+        throw new TypeError('"listener" argument must be a function');
       }
 
       return this.addListener(type, _onceWrap(this, type, listener));
@@ -217,7 +217,7 @@ const EventEmitter = module.exports = class EventEmitter extends events.EventEmi
     let promise;
 
     if (typeof listener !== 'function') {
-      throw new TypeError('listener must be a function');
+      throw new TypeError('"listener" argument must be a function');
     }
 
     events = this._events;
@@ -377,7 +377,7 @@ function _addListener(target, type, listener, prepend) {
   let promise;
 
   if (typeof listener !== 'function') {
-    throw new TypeError('listener must be a function');
+    throw new TypeError('"listener" argument must be a function');
   }
 
   events = target._events;

@@ -330,7 +330,7 @@ describe("Test emitting events", function () {
       this.timeout(1000);
 
       return events.once('foo', fn).then(() => {
-        events._events.should.have.ownProperty('foo').and.be.a.Function;
+        (typeof events._events['foo']).should.be.a.Function;
 
         return events.emit('foo').then((results) => {
 

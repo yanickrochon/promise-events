@@ -50,7 +50,7 @@ describe("Test adding and removing listeners", function () {
           throw new Error("Should not allow adding invalid listener : " + invalid);
         });
       } catch (e) {
-        e.message.should.equal('listener must be a function');
+        e.message.should.equal('"listener" argument must be a function');
       }
 
       try {
@@ -58,7 +58,7 @@ describe("Test adding and removing listeners", function () {
           throw new Error("Should not allow adding invalid once listener : " + invalid);
         });
       } catch (e) {
-        e.message.should.equal('listener must be a function');
+        e.message.should.equal('"listener" argument must be a function');
       }
 
     }));
@@ -181,6 +181,29 @@ describe("Test adding and removing listeners", function () {
   });
 
 
+  it("should not prepend invalid listeners", function () {
+    const events = new Emitter();
+
+    return Promise.all([undefined, null, false, true, -1, 0, 1, '', {}, [], /./].map(function (invalid) {
+      try {
+        events.prependListener('foo', invalid).then(() => {
+          throw new Error("Should not allow prepending invalid listener : " + invalid);
+        });
+      } catch (e) {
+        e.message.should.equal('"listener" argument must be a function');
+      }
+
+      try {
+        events.prependOnceListener('foo', invalid).then(() => {
+          throw new Error("Should not allow prepending invalid once listener : " + invalid);
+        });
+      } catch (e) {
+        e.message.should.equal('"listener" argument must be a function');
+      }
+
+    }));
+  });
+
   it('should prepend listeners', function () {
     const events = new Emitter();
     let buffer = '';
@@ -214,7 +237,7 @@ describe("Test adding and removing listeners", function () {
           throw new Error("Should not allow removing invalid listener : " + invalid);
         });
       } catch (e) {
-        e.message.should.equal('listener must be a function');
+        e.message.should.equal('"listener" argument must be a function');
       }
     }));
   });
@@ -236,23 +259,23 @@ describe("Test adding and removing listeners", function () {
       events.on('removeListener', fn)
     ]).then(() => {
 
-      events._events.should.have.ownProperty('foo').and.be.instanceOf(Array).with.lengthOf(3);
-      events._events.should.have.ownProperty('bar').and.deepEqual([fn, fn]);
-      events._events.should.have.ownProperty('meh').and.deepEqual([fn, fn]);
+      events._events['foo'].should.be.instanceOf(Array).with.lengthOf(3);
+      events._events['bar'].should.deepEqual([fn, fn]);
+      events._events['meh'].should.deepEqual([fn, fn]);
 
       return events.removeAllListeners('foo').then(() => {
 
-        events._events.should.not.have.ownProperty('foo');
-        events._events.should.have.ownProperty('bar').and.deepEqual([fn, fn]);
-        events._events.should.have.ownProperty('meh').and.deepEqual([fn, fn]);
-        events._events.should.have.ownProperty('removeListener').and.equal(fn);
+        ('foo' in events._events).should.equal(false);
+        events._events['bar'].should.deepEqual([fn, fn]);
+        events._events['meh'].should.deepEqual([fn, fn]);
+        events._events['removeListener'].should.equal(fn);
         events._eventsCount.should.equal(5);
 
         return events.removeAllListeners('missingEvent');
       }).then(() => {
-        events._events.should.have.ownProperty('bar').and.deepEqual([fn, fn]);
-        events._events.should.have.ownProperty('meh').and.deepEqual([fn, fn]);
-        events._events.should.have.ownProperty('removeListener').and.equal(fn);
+        events._events['bar'].should.deepEqual([fn, fn]);
+        events._events['meh'].should.deepEqual([fn, fn]);
+        events._events['removeListener'].should.equal(fn);
         events._eventsCount.should.equal(5);
 
         return events.removeAllListeners();
