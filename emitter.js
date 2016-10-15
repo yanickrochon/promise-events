@@ -191,9 +191,9 @@ const EventEmitter = module.exports = class EventEmitter extends events.EventEmi
   once(type, listener) {
     if (arguments.length === 1) {
       // return a Promise instance when no callback is given
-      const deferred = Promise.defer();
-
-      return this.once(type, v => deferred.resolve(v)).then(() => deferred.promise);
+      return new Promise(resolve => {
+        this.once(type, resolve);
+      });
     } else {
       if (typeof listener !== 'function') {
         throw new TypeError('"listener" argument must be a function');
