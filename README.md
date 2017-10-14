@@ -95,33 +95,55 @@ Most of the implementation is fully compatible with the standard `EventEmitter`.
 * [EventEmitter.defaultMaxListeners](https://nodejs.org/api/events.html#events_eventemitter_defaultmaxlisteners)
 * **EventEmitter.defaultResultFilter**
 * [emitter.addListener(eventName, listener)](https://nodejs.org/api/events.html#events_emitter_addlistener_eventname_listener)
+  
   Returns a `Promise` resolving when all `newListener` events have been emitted.
 * [emitter.emit(eventName[, ...args])](https://nodejs.org/api/events.html#events_emitter_emit_eventname_args)
+  
   Returns a `Promise`.
+  
 * [emitter.eventNames()](https://nodejs.org/api/events.html#events_emitter_eventnames)
 * [emitter.getMaxListeners()](https://nodejs.org/api/events.html#events_emitter_getmaxlisteners)
 * **emitter.getResultFilter()**
+  
   Return the result filter function.
+  
 * [emitter.listenerCount(eventName)](https://nodejs.org/api/events.html#events_emitter_listenercount_eventname)
 * [emitter.listeners(eventName)](https://nodejs.org/api/events.html#events_emitter_listeners_eventname)
 * **emitter.maxListeners**
+  
   Alias for `emitter.getMaxListeners()` and `emitter.setMaxListeners()`.
+  
 * [emitter.on(eventName, listener)](https://nodejs.org/api/events.html#events_emitter_on_eventname_listener)
+  
   Returns a `Promise` resolving when all `newListener` events have been emitted.
+  
 * **emitter.once(eventName)**
+  
   Returns a `Promise` that is resolved once *only after* all listeners for the specified event have been called for the given event. (Any `newListener` event will be emitted.)
+  
 * [emitter.prependListener(eventName, listener)](https://nodejs.org/api/events.html#events_emitter_prependlistener_eventname_listener)
+  
   Returns a `Promise` resolving when all `newListener` events have been emitted.
+  
 * **emitter.prependOnceListener(eventName)**
+  
   Returns a `Promise` that is resolved once *only before* all listeners for the specified event have been called for the given event. (Any `newListener` event will be emitted.)
+  
 * [emitter.removeAllListeners([eventName])](https://nodejs.org/api/events.html#events_emitter_removealllisteners_eventname)
+  
   Returns a `Promise` resolving when all `removeListener` events have been emitted.
+  
 * [emitter.removeListener(eventName, listener)](https://nodejs.org/api/events.html#events_emitter_removelistener_eventname_listener)
+  
   Returns a `Promise` resolving when all `removeListener` events have been emitted.
+  
 * **emitter.resultFilter**
+  
   Alias for `emitter.getResultFilter()` and `emitter.setResultFilter()`.
+  
 * [emitter.setMaxListeners(n)](https://nodejs.org/api/events.html#events_emitter_setmaxlisteners_n)
 * **emitter.setResultFilter()**
+  
   Set the result filter function.
 
 
