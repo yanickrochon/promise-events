@@ -3,7 +3,7 @@
 const events = require('events');
 
 
-const EventEmitter = module.exports = class EventEmitter extends events.EventEmitter {
+class EventEmitter extends events.EventEmitter {
   constructor() {
     super();
 
@@ -110,7 +110,7 @@ const EventEmitter = module.exports = class EventEmitter extends events.EventEmi
     switch (len) {
       // fast cases
       case 1:
-        promise = Promise.all(handlers.map(function (handler) {
+        promise = Promise.all(handlers.map(handler => {
           try {
             return handler.call(emitter);
           } catch (err) {
@@ -120,7 +120,7 @@ const EventEmitter = module.exports = class EventEmitter extends events.EventEmi
         break;
       case 2:
         args = arguments;
-        promise = Promise.all(handlers.map(function (handler) {
+        promise = Promise.all(handlers.map(handler => {
           try {
             return handler.call(emitter, args[1]);
           } catch (err) {
@@ -130,7 +130,7 @@ const EventEmitter = module.exports = class EventEmitter extends events.EventEmi
         break;
       case 3:
         args = arguments;
-        promise = Promise.all(handlers.map(function (handler) {
+        promise = Promise.all(handlers.map(handler => {
           try {
             return handler.call(emitter, args[1], args[2]);
           } catch (err) {
@@ -140,7 +140,7 @@ const EventEmitter = module.exports = class EventEmitter extends events.EventEmi
         break;
       case 4:
         args = arguments;
-        promise = Promise.all(handlers.map(function (handler) {
+        promise = Promise.all(handlers.map(handler => {
           try {
             return handler.call(emitter, args[1], args[2], args[3]);
           } catch (err) {
@@ -154,7 +154,7 @@ const EventEmitter = module.exports = class EventEmitter extends events.EventEmi
         for (let i = 1; i < len; ++i) {
           args[i - 1] = arguments[i];
         }
-        promise = Promise.all(handlers.map(function (handler) {
+        promise = Promise.all(handlers.map(handler => {
           try {
             return handler.apply(emitter, args);
           } catch (err) {
@@ -164,9 +164,7 @@ const EventEmitter = module.exports = class EventEmitter extends events.EventEmi
     }
 
     if (needDomainExit) {
-      promise.then(function () {
-        domain.exit();
-      });
+      promise.then(() => domain.exit());
     }
 
     if (!resultFilter) {
@@ -174,9 +172,7 @@ const EventEmitter = module.exports = class EventEmitter extends events.EventEmi
       return promise;
     }
 
-    return promise.then(function(results) {
-      return results.filter(resultFilter);
-    });
+    return promise.then(results => results.filter(resultFilter));
   }
 
 
@@ -311,7 +307,7 @@ const EventEmitter = module.exports = class EventEmitter extends events.EventEmi
 
     // emit removeListener for all listeners on all events
     if (arguments.length === 0) {
-      let keys = Object.keys(events);
+      const keys = Object.keys(events);
 
       for (let i = 0, key; i < keys.length; ++i) {
         key = keys[i];
@@ -428,13 +424,11 @@ function _onceWrap(target, type, listener) {
 
   function g() {
     if (!fired) {
-      let args = arguments;
+      const args = arguments;
 
       fired = true;
 
-      return target.removeListener(type, g).then(function () {
-        return listener.apply(target, args);
-      });
+      return target.removeListener(type, g).then(() => listener.apply(target, args));
     }
   };
 
@@ -442,3 +436,5 @@ function _onceWrap(target, type, listener) {
 
   return g;
 }
+
+module.exports = EventEmitter;
