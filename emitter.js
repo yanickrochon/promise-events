@@ -54,6 +54,7 @@ class EventEmitter extends events.EventEmitter {
     let emitter = this;
     let promise;
 
+    this._event = type;
     events = this._events;
 
     if (events) {
