@@ -19,7 +19,7 @@ describe("Test maxListeners", function () {
 
     [
       undefined, null, false, true, '', 'foo', /./, function () {}, {}, [], -1, NaN
-    ].forEach(n => expect(() => events.maxListeners = n).toThrow(/must be a non-negative number/) );
+    ].forEach(n => expect(() => events.maxListeners = n).toThrow() );
   });
 
 
