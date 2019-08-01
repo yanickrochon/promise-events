@@ -1,17 +1,15 @@
 'use strict';
 
-const should = require('should');
-
 describe("Test maxListeners", function () {
 
   const Emitter = require('../emitter');
   let _maxListeners;
 
-  before(function () {
+  beforeAll(function () {
     _maxListeners = Emitter.defaultMaxListeners;
   });
 
-  after(function () {
+  afterAll(function () {
     Emitter.defaultMaxListeners = _maxListeners;
   });
 
@@ -21,30 +19,28 @@ describe("Test maxListeners", function () {
 
     [
       undefined, null, false, true, '', 'foo', /./, function () {}, {}, [], -1, NaN
-    ].forEach(function (n) {
-      !function () { events.maxListeners = n; }.should.throw(/must be a positive number/);
-    });
+    ].forEach(n => expect(() => events.maxListeners = n).toThrow(/must be a non-negative number/) );
   });
 
 
   it('should reciprocate', function () {
     let events = new Emitter();
 
-    events.getMaxListeners().should.equal(events.maxListeners);
+    expect( events.getMaxListeners() ).toBe(events.maxListeners);
 
     Emitter.defaultMaxListeners = 10;
-    Emitter.defaultMaxListeners.should.equal(10);
+    expect( Emitter.defaultMaxListeners ).toBe(10);
 
-    events.maxListeners.should.equal(Emitter.defaultMaxListeners);
+    expect( events.maxListeners ).toBe(Emitter.defaultMaxListeners);
 
     Emitter.defaultMaxListeners = 0;
-    Emitter.defaultMaxListeners.should.equal(0);
-    events.getMaxListeners().should.equal(0);
-    events.maxListeners.should.equal(0);
+    expect( Emitter.defaultMaxListeners ).toBe(0);
+    expect( events.getMaxListeners() ).toBe(0);
+    expect( events.maxListeners ).toBe(0);
 
     for (let i = 1; i < 100; ++i) {
-      events.setMaxListeners(i).getMaxListeners().should.equal(events.maxListeners);
-      events.maxListeners.should.equal(i);
+      expect( events.setMaxListeners(i).getMaxListeners() ).toBe(events.maxListeners);
+      expect( events.maxListeners ).toBe(i);
     }
   });
 
@@ -66,17 +62,17 @@ describe("Test maxListeners", function () {
     events.maxListeners = 5;
 
     for (var i = 0; i < events.maxListeners + 2; ++i) {
-      events.listeners('test').length.should.equal(i);
+      expect( events.listeners('test') ).toHaveLength(i);
       events.on('test', () => {});
     }
 
-    events.listeners('test').length.should.equal(events.maxListeners + 2);
+    expect( events.listeners('test') ).toHaveLength(events.maxListeners + 2);
 
-    errorCount.should.equal(1);
-    traceCount.should.equal(1);
+    expect( errorCount ).toEqual(1);
+    expect( traceCount ).toEqual(1);
 
     events.removeAllListeners();
-    events.listeners('test').length.should.equal(0);
+    expect( events.listeners('test') ).toHaveLength(0);
 
     console.error = _error;
     console.trace = _trace;

@@ -95,12 +95,13 @@ Most of the implementation is fully compatible with the standard `EventEmitter`.
 * [EventEmitter.defaultMaxListeners](https://nodejs.org/api/events.html#events_eventemitter_defaultmaxlisteners)
 * **EventEmitter.defaultResultFilter**
 * [emitter.addListener(eventName, listener)](https://nodejs.org/api/events.html#events_emitter_addlistener_eventname_listener)
-  
+
   Returns a `Promise` resolving when all `newListener` events have been emitted.
+
 * [emitter.emit(eventName[, ...args])](https://nodejs.org/api/events.html#events_emitter_emit_eventname_args)
-  
+
   Returns a `Promise`.
-  
+
 * [emitter.eventNames()](https://nodejs.org/api/events.html#events_emitter_eventnames)
 * [emitter.getMaxListeners()](https://nodejs.org/api/events.html#events_emitter_getmaxlisteners)
 * **emitter.getResultFilter()**

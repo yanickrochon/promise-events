@@ -6,11 +6,11 @@ describe("Test resultFilter", function () {
   const Emitter = require('../emitter');
   let _resultFilter;
 
-  before(function () {
+  beforeAll(function () {
     _resultFilter = Emitter.defaultResultFilter;
   });
 
-  after(function () {
+  afterAll(function () {
     Emitter.defaultResultFilter = _resultFilter;
   });
 
@@ -20,27 +20,25 @@ describe("Test resultFilter", function () {
 
     [
       true, 'foo', /./, 42, {}, [], -1
-    ].forEach(function (n) {
-      !function () { events.resultFilter = n; }.should.throw('Filter must be a function');
-    });
+    ].forEach(n => expect(() => events.resultFilter = n).toThrow('Filter must be a function') );
   });
 
 
   it('should reciprocate', function () {
     const events = new Emitter();
 
-    (typeof events.getResultFilter()).should.equal('undefined');
+    expect( events.getResultFilter() ).toBe(undefined);
 
     const exampleFilter = function() { return true; };
     Emitter.defaultResultFilter = exampleFilter;
-    Emitter.defaultResultFilter.should.equal(exampleFilter);
+    expect( Emitter.defaultResultFilter ).toBe(exampleFilter);
 
     events.resultFilter = undefined;
-    events.resultFilter.should.equal(Emitter.defaultResultFilter);
+    expect( events.resultFilter ).toBe(Emitter.defaultResultFilter);
 
-    Emitter.defaultMaxListeners = undefined;
-    (typeof Emitter.defaultMaxListeners).should.equal('undefined');
-    (typeof events.maxListeners).should.equal('undefined');
+    Emitter.defaultMaxListeners = 0;
+    expect( Emitter.defaultMaxListeners ).toBe(0);
+    expect( events.maxListeners ).toBe(0);
   });
 
 
@@ -55,7 +53,7 @@ describe("Test resultFilter", function () {
         events.on('foo', () => { return 2; }),
       ]).then(function() {
         return events.emit('foo').then((results) => {
-          results.sort().should.deepEqual([undefined, 1, 2].sort());
+          expect( results ).toEqual( expect.arrayContaining([undefined, 1, 2]) );
         });
       });
     });
@@ -68,7 +66,7 @@ describe("Test resultFilter", function () {
       }
 
       events.setResultFilter(filter);
-      events._resultFilter.should.equal(filter);
+      expect( events ).toHaveProperty('_resultFilter', filter);
 
       return Promise.all([
         events.on('foo', () => { return undefined; }),
@@ -76,7 +74,7 @@ describe("Test resultFilter", function () {
         events.on('foo', () => { return 2; }),
       ]).then(function() {
         return events.emit('foo').then((results) => {
-          results.sort().should.deepEqual([undefined, 1].sort());
+          expect( results ).toEqual( expect.arrayContaining([undefined, 1]) );
         });
       });
     });
@@ -92,7 +90,7 @@ describe("Test resultFilter", function () {
         events.on('foo', () => { return 2; }),
       ]).then(function() {
         return events.emit('foo').then((results) => {
-          results.sort().should.deepEqual([undefined, 1, 2].sort());
+          expect( results ).toEqual( expect.arrayContaining([undefined, 1, 2]) );
         });
       });
     });
@@ -103,7 +101,8 @@ describe("Test resultFilter", function () {
       try {
         events.setResultFilter(42);
       } catch (err) {
-        err.should.be.instanceOf(Error).and.have.ownProperty('message').equal('Filter must be a function');
+        expect( err ).toBeInstanceOf(Error);
+        expect( err ).toHaveProperty('message', 'Filter must be a function');
       }
     });
   });

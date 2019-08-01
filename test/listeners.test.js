@@ -8,33 +8,31 @@ describe("Test adding and removing listeners", function () {
     const events = new Emitter();
     let fn = function () {};
 
-    this.timeout(1000);
-
-    events._eventsCount.should.equal(0);
+    expect( events ).toHaveProperty('_eventsCount', 0);
 
     return events.addListener('foo', fn).then(() => {
-      events._eventsCount.should.equal(1);
-      events._events['foo'].should.equal(fn);
+      expect( events ).toHaveProperty('_eventsCount', 1);
+      expect( events._events ).toHaveProperty('foo', fn);
 
       return events.addListener('foo', fn);
     }).then(() => {
-      events._eventsCount.should.equal(2);
-      events._events['foo'].should.eql([fn, fn]);
+      expect( events ).toHaveProperty('_eventsCount', 2);
+      expect( events._events ).toHaveProperty('foo', [fn, fn]);
 
       return events.removeListener('foo', () => {});  // unknown listener
     }).then(() => {
-      events._eventsCount.should.equal(2);
-      events._events['foo'].should.eql([fn, fn]);
+      expect( events ).toHaveProperty('_eventsCount', 2);
+      expect( events._events ).toHaveProperty('foo', [fn, fn]);
 
       return events.removeListener('foo', fn);
     }).then(() => {
-      events._eventsCount.should.equal(1);
-      events._events['foo'].should.equal(fn);
+      expect( events ).toHaveProperty('_eventsCount', 1);
+      expect( events._events ).toHaveProperty('foo', fn);
 
       return events.removeListener('foo', fn);
     }).then(() => {
-      events._eventsCount.should.equal(0);
-      events._events.should.eql({});
+      expect( events ).toHaveProperty('_eventsCount', 0);
+      expect( events._events ).toEqual({});
 
       return events.removeListener('buz', fn);
     });
@@ -50,7 +48,7 @@ describe("Test adding and removing listeners", function () {
           throw new Error("Should not allow adding invalid listener : " + invalid);
         });
       } catch (e) {
-        e.message.should.equal('"listener" argument must be a function');
+        expect( e ).toHaveProperty('message', '"listener" argument must be a function');
       }
 
       try {
@@ -58,7 +56,7 @@ describe("Test adding and removing listeners", function () {
           throw new Error("Should not allow adding invalid once listener : " + invalid);
         });
       } catch (e) {
-        e.message.should.equal('"listener" argument must be a function');
+        expect( e ).toHaveProperty('message', '"listener" argument must be a function');
       }
 
     }));
@@ -86,7 +84,7 @@ describe("Test adding and removing listeners", function () {
     });
 
     return events.emit('e').then(() => {
-      times_recurse_emitted.should.equal(2);
+      expect( times_recurse_emitted ).toBe(2);
     });
   });
 
@@ -107,10 +105,10 @@ describe("Test adding and removing listeners", function () {
       })
     ]).then(() => {
       return events.emit('foo').then(() => {
-        removeCount.should.equal(1);
-        fooCount.should.equal(1);
+        expect( removeCount ).toBe(1);
+        expect( fooCount ).toBe(1);
 
-        events._events.should.eql({});
+        expect( events._events ).toEqual({});
       });
     });
   });
@@ -129,7 +127,7 @@ describe("Test adding and removing listeners", function () {
         events.emit('hello', 'a', 'b'),
         events.emit('hello', 'a', 'b')
       ]).then(() => {
-        times_hello_emited.should.equal(1);
+        expect( times_hello_emited ).toBe(1);
       });
     });
   });
@@ -149,7 +147,7 @@ describe("Test adding and removing listeners", function () {
       events.emit('hello', 'a', 'b'),
       events.emit('hello', 'a', 'b')
     ]).then(() => {
-      times_hello_emited.should.equal(1);
+      expect( times_hello_emited ).toBe(1);
     });
   });
 
@@ -190,7 +188,7 @@ describe("Test adding and removing listeners", function () {
           throw new Error("Should not allow prepending invalid listener : " + invalid);
         });
       } catch (e) {
-        e.message.should.equal('"listener" argument must be a function');
+        expect( e ).toHaveProperty('message', '"listener" argument must be a function');
       }
 
       try {
@@ -198,7 +196,7 @@ describe("Test adding and removing listeners", function () {
           throw new Error("Should not allow prepending invalid once listener : " + invalid);
         });
       } catch (e) {
-        e.message.should.equal('"listener" argument must be a function');
+        expect( e ).toHaveProperty('message', '"listener" argument must be a function');
       }
 
     }));
@@ -237,7 +235,7 @@ describe("Test adding and removing listeners", function () {
           throw new Error("Should not allow removing invalid listener : " + invalid);
         });
       } catch (e) {
-        e.message.should.equal('"listener" argument must be a function');
+        expect( e ).toHaveProperty('message', '"listener" argument must be a function');
       }
     }));
   });
@@ -245,8 +243,6 @@ describe("Test adding and removing listeners", function () {
   it("should remove all listeners", function () {
     const events = new Emitter();
     let fn = function () {};
-
-    this.timeout(1000);
 
     return Promise.all([
       events.on('foo', fn),
@@ -259,51 +255,51 @@ describe("Test adding and removing listeners", function () {
       events.on('removeListener', fn)
     ]).then(() => {
 
-      events._events['foo'].should.be.instanceOf(Array).with.lengthOf(3);
-      events._events['bar'].should.deepEqual([fn, fn]);
-      events._events['meh'].should.deepEqual([fn, fn]);
+      expect( events._events['foo'] ).toHaveLength(3);
+      expect( events._events['bar'] ).toEqual([fn, fn]);
+      expect( events._events['meh'] ).toEqual([fn, fn]);
 
       return events.removeAllListeners('foo').then(() => {
 
-        ('foo' in events._events).should.equal(false);
-        events._events['bar'].should.deepEqual([fn, fn]);
-        events._events['meh'].should.deepEqual([fn, fn]);
-        events._events['removeListener'].should.equal(fn);
-        events._eventsCount.should.equal(5);
+        expect( events._events ).not.toHaveProperty('foo');
+        expect( events._events['bar'] ).toEqual([fn, fn]);
+        expect( events._events['meh'] ).toEqual([fn, fn]);
+        expect( events._events['removeListener'] ).toEqual(fn);
+        expect( events ).toHaveProperty('_eventsCount', 5);
 
         return events.removeAllListeners('missingEvent');
       }).then(() => {
-        events._events['bar'].should.deepEqual([fn, fn]);
-        events._events['meh'].should.deepEqual([fn, fn]);
-        events._events['removeListener'].should.equal(fn);
-        events._eventsCount.should.equal(5);
+        expect( events._events['bar'] ).toEqual([fn, fn]);
+        expect( events._events['meh'] ).toEqual([fn, fn]);
+        expect( events._events['removeListener'] ).toEqual(fn);
+        expect( events ).toHaveProperty('_eventsCount', 5);
 
         return events.removeAllListeners();
       }).then(() => {
-        events._events.should.eql({});
-        events._eventsCount.should.equal(0);
+        expect( events._events ).toEqual({});
+        expect( events ).toHaveProperty('_eventsCount', 0);
 
         return events.on('foo', fn);
       }).then(() => {
 
-        events._events.should.have.ownProperty('foo').and.equal(fn);
-        events._eventsCount.should.equal(1);
+        expect( events._events ).toHaveProperty('foo', fn);
+        expect( events ).toHaveProperty('_eventsCount', 1);
 
         return events.removeAllListeners('foo');
       }).then(() => {
-        events._events.should.eql({});
-        events._eventsCount.should.equal(0);
+        expect( events._events ).toEqual({});
+        expect( events ).toHaveProperty('_eventsCount', 0);
 
         return events.on('foo', fn).then(events.on('bar', fn)).then(events.removeAllListeners('foo'));
       }).then(() => {
-        events._events.should.not.have.ownProperty('foo');
-        events._events.should.have.ownProperty('bar').and.equal(fn);
-        events._eventsCount.should.equal(1);
+        expect( events._events ).not.toHaveProperty('foo');
+        expect( events._events ).toHaveProperty('bar', fn);
+        expect( events ).toHaveProperty('_eventsCount', 1);
 
         return events.removeAllListeners('buz');
       }).then(() => {
-        events._events.should.have.ownProperty('bar').and.equal(fn);
-        events._eventsCount.should.equal(1);
+        expect( events._events ).toHaveProperty('bar', fn);
+        expect( events ).toHaveProperty('_eventsCount', 1);
 
         // hard reset
         events._events = null;
@@ -311,8 +307,8 @@ describe("Test adding and removing listeners", function () {
 
         return events.removeAllListeners();
       }).then(() => {
-        (null === events._events).should.be.true;
-        events._eventsCount.should.equal(0);
+        expect( events._events ).toBe(null);
+        expect( events ).toHaveProperty('_eventsCount', 0);
       });
 
     });
@@ -330,27 +326,27 @@ describe("Test adding and removing listeners", function () {
         events.emit('foo').then(() => {
           throw new Error('Failed test');
         }, function (err) {
-          err.message.should.equal('Test');
+          expect( err ).toHaveProperty('message', 'Test');
         }),
         events.emit('foo', 1).then(() => {
           throw new Error('Failed test');
         }, function (err) {
-          err.message.should.equal('Test');
+          expect( err ).toHaveProperty('message', 'Test');
         }),
         events.emit('foo', 1, 2).then(() => {
           throw new Error('Failed test');
         }, function (err) {
-          err.message.should.equal('Test');
+          expect( err ).toHaveProperty('message', 'Test');
         }),
         events.emit('foo', 1, 2, 3).then(() => {
           throw new Error('Failed test');
         }, function (err) {
-          err.message.should.equal('Test');
+          expect( err ).toHaveProperty('message', 'Test');
         }),
         events.emit('foo', 1, 2, 3, 4).then(() => {
           throw new Error('Failed test');
         }, function (err) {
-          err.message.should.equal('Test');
+          expect( err ).toHaveProperty('message', 'Test');
         })
       ]);
 

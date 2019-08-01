@@ -2,6 +2,8 @@
 
 const events = require('events');
 
+let handlerProcessor = sequentialHandlerProcessor;
+
 
 class EventEmitter extends events.EventEmitter {
   constructor() {
@@ -110,43 +112,19 @@ class EventEmitter extends events.EventEmitter {
     switch (len) {
       // fast cases
       case 1:
-        promise = Promise.all(handlers.map(handler => {
-          try {
-            return handler.call(emitter);
-          } catch (err) {
-            return Promise.reject(err);
-          }
-        }));
+        promise = handlerProcessor(handlers, handler => handler.call(emitter));
         break;
       case 2:
         args = arguments;
-        promise = Promise.all(handlers.map(handler => {
-          try {
-            return handler.call(emitter, args[1]);
-          } catch (err) {
-            return Promise.reject(err);
-          }
-        }));
+        promise = handlerProcessor(handlers, handler => handler.call(emitter, args[1]));
         break;
       case 3:
         args = arguments;
-        promise = Promise.all(handlers.map(handler => {
-          try {
-            return handler.call(emitter, args[1], args[2]);
-          } catch (err) {
-            return Promise.reject(err);
-          }
-        }));
+        promise = handlerProcessor(handlers, handler => handler.call(emitter, args[1], args[2]));
         break;
       case 4:
         args = arguments;
-        promise = Promise.all(handlers.map(handler => {
-          try {
-            return handler.call(emitter, args[1], args[2], args[3]);
-          } catch (err) {
-            return Promise.reject(err);
-          }
-        }));
+        promise = handlerProcessor(handlers, handler => handler.call(emitter, args[1], args[2], args[3]));
         break;
       // slower
       default:
@@ -154,13 +132,7 @@ class EventEmitter extends events.EventEmitter {
         for (let i = 1; i < len; ++i) {
           args[i - 1] = arguments[i];
         }
-        promise = Promise.all(handlers.map(handler => {
-          try {
-            return handler.apply(emitter, args);
-          } catch (err) {
-            return Promise.reject(err);
-          }
-        }));
+        promise = handlerProcessor(handlers, handler => handler.apply(emitter, args));
     }
 
     if (needDomainExit) {
@@ -170,9 +142,9 @@ class EventEmitter extends events.EventEmitter {
     if (!resultFilter) {
       // unfiltered version
       return promise;
+    } else {
+      return promise.then(results => results.filter(resultFilter));
     }
-
-    return promise.then(results => results.filter(resultFilter));
   }
 
 
@@ -200,13 +172,13 @@ class EventEmitter extends events.EventEmitter {
   }
 
   prependOnceListener(type, listener) {
-   if (typeof listener !== 'function') {
-     throw new TypeError('"listener" argument must be a function');
-   }
+    if (typeof listener !== 'function') {
+      throw new TypeError('"listener" argument must be a function');
+    }
 
-   this.prependListener(type, _onceWrap(this, type, listener));
-   return this;
- }
+    this.prependListener(type, _onceWrap(this, type, listener));
+    return this;
+  }
 
   removeListener(type, listener) {
     let list, events, position;
@@ -238,7 +210,7 @@ class EventEmitter extends events.EventEmitter {
 
       for (let i = list.length; i-- > 0;) {
         if (list[i] === listener ||
-            (list[i].listener && list[i].listener === listener)) {
+          (list[i].listener && list[i].listener === listener)) {
           position = i;
           break;
         }
@@ -358,12 +330,36 @@ Object.defineProperties(EventEmitter, {
     set: function setUsingDomains(b) {
       events.EventEmitter.usingDomains = b;
     }
-  }
+  },
+  //sequentialHandlers: {
+  //  get: function getSequentialHandlers() {
+  //    return handlerProcessor === sequentialHandlerProcessor;
+  //  },
+  //  set: function setSequentialHandlers(b) {
+  //    handlerProcessor = b ? sequentialHandlerProcessor : concurrentHandlerProcessor;
+  //  }
+  //}
 });
 
 EventEmitter.defaultResultFilter = undefined;
 EventEmitter.prototype.on = EventEmitter.prototype.addListener;
 EventEmitter.prototype._resultFilter = undefined;
+
+
+function sequentialHandlerProcessor(handlers, callback) {
+  let results = [];
+  return handlers.reduce((promise, handler) => promise.then(() => callback(handler)).then(result => results.push(result)), Promise.resolve()).then(() => results);
+}
+
+//function concurrentHandlerProcessor(handlers, callback) {
+//  return Promise.all(handlers.map(handler => {
+//    try {
+//      return callback(handler);
+//    } catch (err) {
+//      return Promise.reject(err);
+//    }
+//  }));
+//}
 
 
 function _addListener(target, type, listener, prepend) {
@@ -407,9 +403,9 @@ function _addListener(target, type, listener, prepend) {
       if (m && m > 0 && existing.length > m) {
         existing.warned = true;
         console.error('warning: possible EventEmitter memory ' +
-                      'leak detected. %d %s listeners added. ' +
-                      'Use emitter.setMaxListeners() to increase limit.',
-                      existing.length, type);
+          'leak detected. %d %s listeners added. ' +
+          'Use emitter.setMaxListeners() to increase limit.',
+          existing.length, type);
         console.trace();
       }
     }
