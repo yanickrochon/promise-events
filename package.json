@@ -1,6 +1,6 @@
 {
   "name": "promise-events",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "description": "A promise-based events emitter",
   "author": "Yanick Rochon <yanick.rochon@gmail.com>",
   "keywords": [
@@ -24,7 +24,7 @@
     "url": "https://github.com/yanickrochon/promise-events/issues"
   },
   "devDependencies": {
-    "jest": "^24.8.0"
+    "jest": "^25.1.0"
   },
   "engines": {
     "node": ">=8.0.0"

@@ -176,8 +176,7 @@ class EventEmitter extends events.EventEmitter {
       throw new TypeError('"listener" argument must be a function');
     }
 
-    this.prependListener(type, _onceWrap(this, type, listener));
-    return this;
+    return this.prependListener(type, _onceWrap(this, type, listener));
   }
 
   removeListener(type, listener) {
@@ -392,10 +391,14 @@ function _addListener(target, type, listener, prepend) {
   } else {
     if (typeof existing === 'function') {
       // Adding the second element, need to change to array.
-      existing = events[type] = [existing, listener];
+      existing = events[type] = prepend ? [listener, existing] : [existing, listener];
     } else {
-      // If we've already got an array, just append.
-      existing.push(listener);
+      // If we've already got an array, just add it to the array.
+      if (prepend) {
+        existing.unshift(listener);
+      } else {
+        existing.push(listener);
+      }
     }
     // Check for listener leak
     if (!existing.warned) {
