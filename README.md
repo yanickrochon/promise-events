@@ -94,6 +94,7 @@ Most of the implementation is fully compatible with the standard `EventEmitter`.
 * [EventEmitter.listenerCount(emitter, eventName)](https://nodejs.org/api/events.html#events_eventemitter_listenercount_emitter_eventname) *deprecated*
 * [EventEmitter.defaultMaxListeners](https://nodejs.org/api/events.html#events_eventemitter_defaultmaxlisteners)
 * **EventEmitter.defaultResultFilter**
+* [EventEmitter.errorMonitor](https://nodejs.org/api/events.html#events_eventemitter_errorMonitor)
 * [emitter.addListener(eventName, listener)](https://nodejs.org/api/events.html#events_emitter_addlistener_eventname_listener)
 
   Returns a `Promise` resolving when all `newListener` events have been emitted.

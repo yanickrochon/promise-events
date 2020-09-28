@@ -2,8 +2,6 @@
 
 const events = require('events');
 
-let handlerProcessor = sequentialHandlerProcessor;
-
 
 class EventEmitter extends events.EventEmitter {
   constructor() {
@@ -54,16 +52,13 @@ class EventEmitter extends events.EventEmitter {
     let needDomainExit = false;
     let doError = (type === 'error');
     let emitter = this;
-    let promise;
-
-    events = this._events;
-
-    if (events) {
-      doError = (doError && events.error == null);
-    } else if (!doError) {
-      return Promise.resolve();
+    let promise = Promise.resolve();
+    
+    if (doError && typeof EventEmitter.errorMonitor === 'function') {
+      promise.then(() => EventEmitter.errorMonitor(er));
     }
 
+    events = this._events;
     domain = this.domain;
 
     // If there is no 'error' event listener then reject
@@ -81,20 +76,22 @@ class EventEmitter extends events.EventEmitter {
         er = new Error('Uncaught, unspecified "error" event.');
       }
 
+      if (events && events.error == null) {
+        return promise.then(() => { throw er; });
+      }
+  
       if (domain) {
         er.domainEmitter = this;
         er.domain = domain;
         er.domainThrown = false;
-        domain.emit('error', er);
+        promise.then(() => domain.emit('error', er));
       }
-
-      return Promise.reject(er);
     }
 
     handlers = events[type];
 
     if (!handlers) {
-      return Promise.resolve();
+      return promise;
     }
 
     if (domain && this !== process) {
@@ -112,19 +109,19 @@ class EventEmitter extends events.EventEmitter {
     switch (len) {
       // fast cases
       case 1:
-        promise = handlerProcessor(handlers, handler => handler.call(emitter));
+        promise.then(sequentialHandlerProcessor(handlers, handler => handler.call(emitter)));
         break;
       case 2:
         args = arguments;
-        promise = handlerProcessor(handlers, handler => handler.call(emitter, args[1]));
+        promise.then(sequentialHandlerProcessor(handlers, handler => handler.call(emitter, args[1])));
         break;
       case 3:
         args = arguments;
-        promise = handlerProcessor(handlers, handler => handler.call(emitter, args[1], args[2]));
+        promise.then(sequentialHandlerProcessor(handlers, handler => handler.call(emitter, args[1], args[2])));
         break;
       case 4:
         args = arguments;
-        promise = handlerProcessor(handlers, handler => handler.call(emitter, args[1], args[2], args[3]));
+        promise.then(sequentialHandlerProcessor(handlers, handler => handler.call(emitter, args[1], args[2], args[3])));
         break;
       // slower
       default:
@@ -132,11 +129,11 @@ class EventEmitter extends events.EventEmitter {
         for (let i = 1; i < len; ++i) {
           args[i - 1] = arguments[i];
         }
-        promise = handlerProcessor(handlers, handler => handler.apply(emitter, args));
+        promise.then(sequentialHandlerProcessor(handlers, handler => handler.apply(emitter, args)));
     }
 
     if (needDomainExit) {
-      promise.then(() => domain.exit());
+      promise.then(() => domain.exit(), err => { domain.exit(); throw err; });
     }
 
     if (!resultFilter) {
@@ -330,14 +327,14 @@ Object.defineProperties(EventEmitter, {
       events.EventEmitter.usingDomains = b;
     }
   },
-  //sequentialHandlers: {
-  //  get: function getSequentialHandlers() {
-  //    return handlerProcessor === sequentialHandlerProcessor;
-  //  },
-  //  set: function setSequentialHandlers(b) {
-  //    handlerProcessor = b ? sequentialHandlerProcessor : concurrentHandlerProcessor;
-  //  }
-  //}
+  errorMonitor: {
+    get: function getErrorMonitor() {
+      return events.EventEmitter.errorMonitor;
+    },
+    set: function setErrorMonitor(monitor) {
+      events.EventEmitter.errorMonitor = monitor;
+    }
+  }
 });
 
 EventEmitter.defaultResultFilter = undefined;
@@ -346,19 +343,10 @@ EventEmitter.prototype._resultFilter = undefined;
 
 
 function sequentialHandlerProcessor(handlers, callback) {
-  let results = [];
-  return handlers.reduce((promise, handler) => promise.then(() => callback(handler)).then(result => results.push(result)), Promise.resolve()).then(() => results);
+  const results = [];
+  const p = handlers.reduce((promise, handler) => promise.then(() => callback(handler)).then(result => results.push(result)), Promise.resolve()).then(() => results);
+  return () => p;
 }
-
-//function concurrentHandlerProcessor(handlers, callback) {
-//  return Promise.all(handlers.map(handler => {
-//    try {
-//      return callback(handler);
-//    } catch (err) {
-//      return Promise.reject(err);
-//    }
-//  }));
-//}
 
 
 function _addListener(target, type, listener, prepend) {
