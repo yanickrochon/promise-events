@@ -43,50 +43,55 @@ class EventEmitter extends events.EventEmitter {
   }
 
 
-  emit(type) {
+  emit(type, ...args) {
     // keep a reference to _resultFilter since the filter function
     // could theoretically set a new result filter, leading to
     // undefined results
     const resultFilter = this.getResultFilter();
-    let er, handlers, len, args, events, domain;
+    const events = this._events;
+    const domain = this._domain;
+    const errorMonitor = EventEmitter.errorMonitor;
+    let handlers;
     let needDomainExit = false;
     let doError = (type === 'error');
-    let emitter = this;
+    //let emitter = this;
     let promise = Promise.resolve();
-    
-    if (doError && typeof EventEmitter.errorMonitor === 'function') {
-      promise.then(() => EventEmitter.errorMonitor(er));
+
+    if (events !== undefined) {
+      if (doError && events[errorMonitor] !== undefined) {
+        promise.then(() => this.emit(errorMonitor, ...args));
+      }
+      doError = (doError && events.error === undefined);
+    } else if (!doError) {
+      return promise.then(() => false);
     }
 
-    events = this._events;
-    domain = this.domain;
-
-    // If there is no 'error' event listener then reject
     if (doError) {
-      er = arguments[1];
-
-      if (er) {
-        if (!(er instanceof Error)) {
-          // At least give some kind of context to the user
-          let err = new Error('Uncaught, unspecified "error" event. (' + er + ')');
-          err.context = er;
-          er = err;
-        }
-      } else {
+      let er;
+      if (args.length > 0) {
+        er = args[0];
+      }
+      if (!er) {
         er = new Error('Uncaught, unspecified "error" event.');
+      } else if (!(er instanceof Error)) {
+        // At least give some kind of context to the user
+        let err = new Error('Uncaught, unspecified "error" event. (' + er + ')');
+        err.context = er;
+        er = err;
       }
 
-      if (events && events.error == null) {
-        return promise.then(() => { throw er; });
-      }
-  
+      // @deprecated
+      // TODO : remove domains
       if (domain) {
         er.domainEmitter = this;
         er.domain = domain;
         er.domainThrown = false;
         promise.then(() => domain.emit('error', er));
       }
+
+      return preomise.then(() => { throw er; });
     }
+
 
     handlers = events[type];
 
@@ -101,35 +106,11 @@ class EventEmitter extends events.EventEmitter {
 
     if (typeof handlers === 'function') {
       handlers = [handlers];
-    } else {
-      handlers = handlers.slice();
     }
 
-    len = arguments.length;
-    switch (len) {
-      // fast cases
-      case 1:
-        promise.then(sequentialHandlerProcessor(handlers, handler => handler.call(emitter)));
-        break;
-      case 2:
-        args = arguments;
-        promise.then(sequentialHandlerProcessor(handlers, handler => handler.call(emitter, args[1])));
-        break;
-      case 3:
-        args = arguments;
-        promise.then(sequentialHandlerProcessor(handlers, handler => handler.call(emitter, args[1], args[2])));
-        break;
-      case 4:
-        args = arguments;
-        promise.then(sequentialHandlerProcessor(handlers, handler => handler.call(emitter, args[1], args[2], args[3])));
-        break;
-      // slower
-      default:
-        args = new Array(len - 1);
-        for (let i = 1; i < len; ++i) {
-          args[i - 1] = arguments[i];
-        }
-        promise.then(sequentialHandlerProcessor(handlers, handler => handler.apply(emitter, args)));
+    if (handlers.length) {
+      const results = [];
+      handlers.reduce((p, handler) => p.then(() => handler(type, ...args)).then(result => results.push(result), err => results.push(err)), promise).then(() => results);
     }
 
     if (needDomainExit) {
@@ -341,12 +322,6 @@ EventEmitter.defaultResultFilter = undefined;
 EventEmitter.prototype.on = EventEmitter.prototype.addListener;
 EventEmitter.prototype._resultFilter = undefined;
 
-
-function sequentialHandlerProcessor(handlers, callback) {
-  const results = [];
-  const p = handlers.reduce((promise, handler) => promise.then(() => callback(handler)).then(result => results.push(result)), Promise.resolve()).then(() => results);
-  return () => p;
-}
 
 
 function _addListener(target, type, listener, prepend) {
