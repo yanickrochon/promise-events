@@ -6,10 +6,6 @@ describe("Test inheritance", () => {
   const Emitter = require('../emitter');
   const NativeEmitter = require('events').EventEmitter;
 
-  afterEach(() => {
-    Emitter.errorMonitor = undefined;
-  });
-
 
   it("should create valid instance", () => {
     const util = require('util');
@@ -55,20 +51,21 @@ describe("Test inheritance", () => {
 
 
   it('should use error monitor', async () => {
-    let errorMonitored = null;
-    let errorEmitted = null;
+    if (Emitter.errorMonitor) {
+      const events = new Emitter();
+      const error = new Error('test');
 
-    Emitter.errorMonitor = err => errorMonitored = err;
+      let errorMonitored = null;
+      let errorEmitted = null;
 
-    const events = new Emitter();
-    const error = new Error('test');
+      await events.addListener(Emitter.errorMonitor, err => errorMonitored = err);
+      await events.addListener('error', err => errorEmitted = err);
 
-    await events.addListener('error', err => errorEmitted = err)
-    await events.emit('error', error).catch(err => console.log(err.stack));
+      await events.emit('error', error);
 
-    expect( errorMonitored ).toBe(error);
-    expect( errorEmitted ).toBe(error);
-
+      expect( errorMonitored ).toBe(error);
+      expect( errorEmitted ).toBe(error);
+    }
   });
 
 });

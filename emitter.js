@@ -51,15 +51,16 @@ class EventEmitter extends events.EventEmitter {
     const events = this._events;
     const domain = this._domain;
     const errorMonitor = EventEmitter.errorMonitor;
+    const results = [];
     let handlers;
     let needDomainExit = false;
     let doError = (type === 'error');
     //let emitter = this;
     let promise = Promise.resolve();
 
-    if (events !== undefined) {
-      if (doError && events[errorMonitor] !== undefined) {
-        promise.then(() => this.emit(errorMonitor, ...args));
+    if (events) {
+      if (doError && (events[errorMonitor] !== undefined)) {
+        promise = promise.then(this.emit(errorMonitor, ...args));
       }
       doError = (doError && events.error === undefined);
     } else if (!doError) {
@@ -86,14 +87,14 @@ class EventEmitter extends events.EventEmitter {
         er.domainEmitter = this;
         er.domain = domain;
         er.domainThrown = false;
-        promise.then(() => domain.emit('error', er));
+        promise = promise.then(() => domain.emit('error', er));
       }
 
-      return preomise.then(() => { throw er; });
+      return promise.then(() => { throw er; });
     }
 
 
-    handlers = events[type];
+    handlers = events && events[type];
 
     if (!handlers) {
       return promise;
@@ -109,20 +110,14 @@ class EventEmitter extends events.EventEmitter {
     }
 
     if (handlers.length) {
-      const results = [];
-      handlers.reduce((p, handler) => p.then(() => handler(type, ...args)).then(result => results.push(result), err => results.push(err)), promise).then(() => results);
+      promise = handlers.reduce((p, handler) => p.then(() => handler(...args)).then(result => results.push(result)), promise);
     }
 
     if (needDomainExit) {
-      promise.then(() => domain.exit(), err => { domain.exit(); throw err; });
+      promise = promise.then(() => domain.exit(), err => { domain.exit(); throw err; });
     }
 
-    if (!resultFilter) {
-      // unfiltered version
-      return promise;
-    } else {
-      return promise.then(results => results.filter(resultFilter));
-    }
+    return promise.then(() => resultFilter ? results.filter(resultFilter) : results);
   }
 
 
@@ -159,7 +154,6 @@ class EventEmitter extends events.EventEmitter {
 
   removeListener(type, listener) {
     let list, events, position;
-    let promise;
 
     if (typeof listener !== 'function') {
       throw new TypeError('"listener" argument must be a function');
@@ -179,7 +173,7 @@ class EventEmitter extends events.EventEmitter {
         delete events[type];
 
         if (events.removeListener) {
-          promise = this.emit('removeListener', type, listener);
+          return this.emit('removeListener', type, listener);
         }
       }
     } else if (typeof list !== 'function') {
@@ -218,11 +212,11 @@ class EventEmitter extends events.EventEmitter {
       --this._eventsCount;
 
       if (events.removeListener) {
-        promise = this.emit('removeListener', type, listener);
+        return this.emit('removeListener', type, listener);
       }
     }
 
-    return promise || Promise.resolve();
+    return Promise.resolve();
   }
 
 
@@ -262,10 +256,10 @@ class EventEmitter extends events.EventEmitter {
         key = keys[i];
         if (key === 'removeListener') continue;
 
-        promise = promise && promise.then(this.removeAllListeners(key)) || this.removeAllListeners(key);
+        promise = promise ? promise.then(this.removeAllListeners(key)) : this.removeAllListeners(key);
       }
 
-      promise = promise && promise.then(this.removeAllListeners('removeListener')) || this.removeAllListeners('removeListener');
+      promise = promise ? promise.then(this.removeAllListeners('removeListener')) : this.removeAllListeners('removeListener');
       this._events = {};
       this._eventsCount = 0;
 
@@ -279,7 +273,7 @@ class EventEmitter extends events.EventEmitter {
     } else if (listeners) {
       // LIFO order
       for (let i = listeners.length - 1; i >= 0; --i) {
-        promise = promise && promise.then(this.removeListener(type, listeners[i])) || this.removeListener(type, listeners[i]);
+        promise = promise ? promise.then(this.removeListener(type, listeners[i])) : this.removeListener(type, listeners[i]);
       }
     }
 
@@ -306,14 +300,6 @@ Object.defineProperties(EventEmitter, {
     },
     set: function setUsingDomains(b) {
       events.EventEmitter.usingDomains = b;
-    }
-  },
-  errorMonitor: {
-    get: function getErrorMonitor() {
-      return events.EventEmitter.errorMonitor;
-    },
-    set: function setErrorMonitor(monitor) {
-      events.EventEmitter.errorMonitor = monitor;
     }
   }
 });
