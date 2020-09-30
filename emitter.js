@@ -2,8 +2,6 @@
 
 const events = require('events');
 
-let handlerProcessor = sequentialHandlerProcessor;
-
 
 class EventEmitter extends events.EventEmitter {
   constructor() {
@@ -45,56 +43,61 @@ class EventEmitter extends events.EventEmitter {
   }
 
 
-  emit(type) {
+  emit(type, ...args) {
     // keep a reference to _resultFilter since the filter function
     // could theoretically set a new result filter, leading to
     // undefined results
     const resultFilter = this.getResultFilter();
-    let er, handlers, len, args, events, domain;
+    const events = this._events;
+    const domain = this._domain;
+    const errorMonitor = EventEmitter.errorMonitor;
+    const results = [];
+    let handlers;
     let needDomainExit = false;
     let doError = (type === 'error');
-    let emitter = this;
-    let promise;
-
-    events = this._events;
+    //let emitter = this;
+    let promise = Promise.resolve();
 
     if (events) {
-      doError = (doError && events.error == null);
+      if (doError && (events[errorMonitor] !== undefined)) {
+        promise = promise.then(this.emit(errorMonitor, ...args));
+      }
+      doError = (doError && events.error === undefined);
     } else if (!doError) {
-      return Promise.resolve();
+      return promise.then(() => false);
     }
 
-    domain = this.domain;
-
-    // If there is no 'error' event listener then reject
     if (doError) {
-      er = arguments[1];
-
-      if (er) {
-        if (!(er instanceof Error)) {
-          // At least give some kind of context to the user
-          let err = new Error('Uncaught, unspecified "error" event. (' + er + ')');
-          err.context = er;
-          er = err;
-        }
-      } else {
+      let er;
+      if (args.length > 0) {
+        er = args[0];
+      }
+      if (!er) {
         er = new Error('Uncaught, unspecified "error" event.');
+      } else if (!(er instanceof Error)) {
+        // At least give some kind of context to the user
+        let err = new Error('Uncaught, unspecified "error" event. (' + er + ')');
+        err.context = er;
+        er = err;
       }
 
+      // @deprecated
+      // TODO : remove domains
       if (domain) {
         er.domainEmitter = this;
         er.domain = domain;
         er.domainThrown = false;
-        domain.emit('error', er);
+        promise = promise.then(() => domain.emit('error', er));
       }
 
-      return Promise.reject(er);
+      return promise.then(() => { throw er; });
     }
 
-    handlers = events[type];
+
+    handlers = events && events[type];
 
     if (!handlers) {
-      return Promise.resolve();
+      return promise;
     }
 
     if (domain && this !== process) {
@@ -104,47 +107,17 @@ class EventEmitter extends events.EventEmitter {
 
     if (typeof handlers === 'function') {
       handlers = [handlers];
-    } else {
-      handlers = handlers.slice();
     }
 
-    len = arguments.length;
-    switch (len) {
-      // fast cases
-      case 1:
-        promise = handlerProcessor(handlers, handler => handler.call(emitter));
-        break;
-      case 2:
-        args = arguments;
-        promise = handlerProcessor(handlers, handler => handler.call(emitter, args[1]));
-        break;
-      case 3:
-        args = arguments;
-        promise = handlerProcessor(handlers, handler => handler.call(emitter, args[1], args[2]));
-        break;
-      case 4:
-        args = arguments;
-        promise = handlerProcessor(handlers, handler => handler.call(emitter, args[1], args[2], args[3]));
-        break;
-      // slower
-      default:
-        args = new Array(len - 1);
-        for (let i = 1; i < len; ++i) {
-          args[i - 1] = arguments[i];
-        }
-        promise = handlerProcessor(handlers, handler => handler.apply(emitter, args));
+    if (handlers.length) {
+      promise = handlers.reduce((p, handler) => p.then(() => handler(...args)).then(result => results.push(result)), promise);
     }
 
     if (needDomainExit) {
-      promise.then(() => domain.exit());
+      promise = promise.then(() => domain.exit(), err => { domain.exit(); throw err; });
     }
 
-    if (!resultFilter) {
-      // unfiltered version
-      return promise;
-    } else {
-      return promise.then(results => results.filter(resultFilter));
-    }
+    return promise.then(() => resultFilter ? results.filter(resultFilter) : results);
   }
 
 
@@ -181,7 +154,6 @@ class EventEmitter extends events.EventEmitter {
 
   removeListener(type, listener) {
     let list, events, position;
-    let promise;
 
     if (typeof listener !== 'function') {
       throw new TypeError('"listener" argument must be a function');
@@ -201,7 +173,7 @@ class EventEmitter extends events.EventEmitter {
         delete events[type];
 
         if (events.removeListener) {
-          promise = this.emit('removeListener', type, listener);
+          return this.emit('removeListener', type, listener);
         }
       }
     } else if (typeof list !== 'function') {
@@ -240,11 +212,11 @@ class EventEmitter extends events.EventEmitter {
       --this._eventsCount;
 
       if (events.removeListener) {
-        promise = this.emit('removeListener', type, listener);
+        return this.emit('removeListener', type, listener);
       }
     }
 
-    return promise || Promise.resolve();
+    return Promise.resolve();
   }
 
 
@@ -284,10 +256,10 @@ class EventEmitter extends events.EventEmitter {
         key = keys[i];
         if (key === 'removeListener') continue;
 
-        promise = promise && promise.then(this.removeAllListeners(key)) || this.removeAllListeners(key);
+        promise = promise ? promise.then(this.removeAllListeners(key)) : this.removeAllListeners(key);
       }
 
-      promise = promise && promise.then(this.removeAllListeners('removeListener')) || this.removeAllListeners('removeListener');
+      promise = promise ? promise.then(this.removeAllListeners('removeListener')) : this.removeAllListeners('removeListener');
       this._events = {};
       this._eventsCount = 0;
 
@@ -301,7 +273,7 @@ class EventEmitter extends events.EventEmitter {
     } else if (listeners) {
       // LIFO order
       for (let i = listeners.length - 1; i >= 0; --i) {
-        promise = promise && promise.then(this.removeListener(type, listeners[i])) || this.removeListener(type, listeners[i]);
+        promise = promise ? promise.then(this.removeListener(type, listeners[i])) : this.removeListener(type, listeners[i]);
       }
     }
 
@@ -329,36 +301,13 @@ Object.defineProperties(EventEmitter, {
     set: function setUsingDomains(b) {
       events.EventEmitter.usingDomains = b;
     }
-  },
-  //sequentialHandlers: {
-  //  get: function getSequentialHandlers() {
-  //    return handlerProcessor === sequentialHandlerProcessor;
-  //  },
-  //  set: function setSequentialHandlers(b) {
-  //    handlerProcessor = b ? sequentialHandlerProcessor : concurrentHandlerProcessor;
-  //  }
-  //}
+  }
 });
 
 EventEmitter.defaultResultFilter = undefined;
 EventEmitter.prototype.on = EventEmitter.prototype.addListener;
 EventEmitter.prototype._resultFilter = undefined;
 
-
-function sequentialHandlerProcessor(handlers, callback) {
-  let results = [];
-  return handlers.reduce((promise, handler) => promise.then(() => callback(handler)).then(result => results.push(result)), Promise.resolve()).then(() => results);
-}
-
-//function concurrentHandlerProcessor(handlers, callback) {
-//  return Promise.all(handlers.map(handler => {
-//    try {
-//      return callback(handler);
-//    } catch (err) {
-//      return Promise.reject(err);
-//    }
-//  }));
-//}
 
 
 function _addListener(target, type, listener, prepend) {

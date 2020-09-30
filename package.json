@@ -1,6 +1,6 @@
 {
   "name": "promise-events",
-  "version": "0.1.8",
+  "version": "0.2.0",
   "description": "A promise-based events emitter",
   "author": "Yanick Rochon <yanick.rochon@gmail.com>",
   "keywords": [
@@ -12,7 +12,7 @@
   "license": "MIT",
   "main": "emitter.js",
   "scripts": {
-    "test": "jest ./test",
+    "test": "jest --detectOpenHandles --forceExit",
     "test-cov": "npm run test -- --coverage"
   },
   "homepage": "https://github.com/yanickrochon/promise-events#readme",
@@ -28,5 +28,8 @@
   },
   "engines": {
     "node": ">=8.0.0"
+  },
+  "jest": {
+    "testEnvironment": "node"
   }
 }
