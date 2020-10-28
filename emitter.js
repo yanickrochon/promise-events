@@ -4,6 +4,8 @@ const events = require('events');
 
 
 class EventEmitter extends events.EventEmitter {
+  emitSync = events.EventEmitter.prototype.emit
+
   constructor() {
     super();
 
