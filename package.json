@@ -11,6 +11,12 @@
   ],
   "license": "MIT",
   "main": "emitter.js",
+  "files": [
+    "emitter.js",
+    "emitter.d.ts",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
     "test": "jest --detectOpenHandles --forceExit",
     "test-cov": "npm run test -- --coverage"
