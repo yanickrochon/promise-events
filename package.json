@@ -11,6 +11,12 @@
   ],
   "license": "MIT",
   "main": "emitter.js",
+  "files": [
+    "emitter.js",
+    "emitter.d.ts",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
     "test": "jest --detectOpenHandles --forceExit",
     "test-cov": "npm run test -- --coverage"
@@ -24,7 +30,7 @@
     "url": "https://github.com/yanickrochon/promise-events/issues"
   },
   "devDependencies": {
-    "jest": "^25.1.0"
+    "jest": "^25.5.4"
   },
   "engines": {
     "node": ">=8.0.0"
