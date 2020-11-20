@@ -68,4 +68,8 @@ describe("Test inheritance", () => {
     }
   });
 
+  it("Emitter should provide self reference", function () {
+    expect(Emitter.EventEmitter).toBe(Emitter)
+  });
+
 });

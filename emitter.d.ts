@@ -24,6 +24,7 @@ declare class EventEmitter {
     on(type: string | symbol, listener: TListener): Promise<any>;
     off(type: string | symbol, listener: TListener): Promise<any>;
 
+    static EventEmitter: typeof EventEmitter;
     static defaultMaxListeners: number | undefined;
     static usingDomains: boolean | undefined;
 }
