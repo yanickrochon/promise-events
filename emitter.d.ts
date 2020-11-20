@@ -1,3 +1,4 @@
+declare type TEventType = string | symbol;
 declare type TListener = (...args: any[]) => void;
 declare type TFilter<T = any> = {
     <S extends T>(callbackfn: (value: T, index: number, array: T[]) => value is S, thisArg?: any): S[];
@@ -14,18 +15,19 @@ declare class EventEmitter {
     setResultFilter(filter: TFilter): this;
     get resultFilter(): TFilter | undefined;
     set resultFilter(filter: TFilter);
-    emit(type: string | symbol, ...args: any[]): Promise<any>;
-    addListener(type: string | symbol, listener: TListener): Promise<any>;
-    prependListener(type: string | symbol, listener: TListener): Promise<any>;
-    once(type: string | symbol, listener: TListener): Promise<any>;
-    prependOnceListener(type: string | symbol, listener: TListener): Promise<any>;
-    removeListener(type: string | symbol, listener: TListener): Promise<any>;
+    emit(type: TEventType, ...args: any[]): Promise<any>;
+    addListener(type: TEventType, listener: TListener): Promise<any>;
+    prependListener(type: TEventType, listener: TListener): Promise<any>;
+    once(type: TEventType, listener: TListener): Promise<any>;
+    prependOnceListener(type: TEventType, listener: TListener): Promise<any>;
+    removeListener(type: TEventType, listener: TListener): Promise<any>;
     removeAllListeners(type: string | symbol): Promise<any>;
-    on(type: string | symbol, listener: TListener): Promise<any>;
-    off(type: string | symbol, listener: TListener): Promise<any>;
+    on(type: TEventType, listener: TListener): Promise<any>;
+    off(type: TEventType, listener: TListener): Promise<any>;
 
     static EventEmitter: typeof EventEmitter;
     static defaultMaxListeners: number | undefined;
     static usingDomains: boolean | undefined;
+    static listenerCount: (events: EventEmitter, type: TEventType) => number;
 }
 export = EventEmitter;
