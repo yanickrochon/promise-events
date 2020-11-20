@@ -5,34 +5,41 @@ describe("Test adding and removing listeners", function () {
 
 
   it("should add and remove listeners", function () {
+    const asArray = (value) => Array.isArray(value) ? value : [value];
     const events = new Emitter();
     let fn = function () {};
 
     expect( events ).toHaveProperty('_eventsCount', 0);
+    expect( events.listeners() ).toEqual([])
 
     return events.addListener('foo', fn).then(() => {
       expect( events ).toHaveProperty('_eventsCount', 1);
       expect( events._events ).toHaveProperty('foo', fn);
+      expect( events.listeners('foo') ).toEqual(asArray(events._events['foo']))
 
       return events.addListener('foo', fn);
     }).then(() => {
       expect( events ).toHaveProperty('_eventsCount', 2);
       expect( events._events ).toHaveProperty('foo', [fn, fn]);
+      expect( events.listeners('foo') ).toEqual(asArray(events._events['foo']))
 
       return events.removeListener('foo', () => {});  // unknown listener
     }).then(() => {
       expect( events ).toHaveProperty('_eventsCount', 2);
       expect( events._events ).toHaveProperty('foo', [fn, fn]);
+      expect( events.listeners('foo') ).toEqual(asArray(events._events['foo']))
 
       return events.removeListener('foo', fn);
     }).then(() => {
       expect( events ).toHaveProperty('_eventsCount', 1);
       expect( events._events ).toHaveProperty('foo', fn);
+      expect( events.listeners('foo') ).toEqual(asArray(events._events['foo']))
 
       return events.removeListener('foo', fn);
     }).then(() => {
       expect( events ).toHaveProperty('_eventsCount', 0);
       expect( events._events ).toEqual({});
+      expect( events.listeners('foo') ).toEqual([])
 
       return events.removeListener('buz', fn);
     });
