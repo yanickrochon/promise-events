@@ -21,6 +21,9 @@ declare class EventEmitter {
     prependOnceListener(type: string | symbol, listener: TListener): Promise<any>;
     removeListener(type: string | symbol, listener: TListener): Promise<any>;
     removeAllListeners(type: string | symbol): Promise<any>;
+    on(type: string | symbol, listener: TListener): Promise<any>;
+    off(type: string | symbol, listener: TListener): Promise<any>;
+
     static defaultMaxListeners: number | undefined;
     static usingDomains: boolean | undefined;
 }

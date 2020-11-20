@@ -37,6 +37,7 @@ describe("Test EventEmitter prototype", function () {
     let descriptor;
 
     expect( Emitter.prototype.on ).toBe( Emitter.prototype.addListener );
+    expect( Emitter.prototype.off ).toBe( Emitter.prototype.removeListener );
     expect( Emitter.prototype ).toHaveProperty('maxListeners');
 
     descriptor = Object.getOwnPropertyDescriptor(Emitter.prototype, 'maxListeners');
