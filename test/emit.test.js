@@ -61,6 +61,7 @@ describe("Test emitting events", () => {
 
           expect( results ).toHaveLength(1);
           expect( Emitter.listenerCount(events, 'foo') ).toEqual(1);
+          expect( events.listenerCount('foo') ).toEqual(1);
 
           return events.on('foo', fn).then(() => {
             expect( events.listeners('foo') ).toHaveLength(2);
@@ -69,6 +70,7 @@ describe("Test emitting events", () => {
 
               expect( results ).toHaveLength(2);
               expect( Emitter.listenerCount(events, 'foo') ).toEqual(2);
+              expect( events.listenerCount('foo') ).toEqual(2);
     
             });
           });
