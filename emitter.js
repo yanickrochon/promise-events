@@ -60,7 +60,7 @@ class EventEmitter extends events.EventEmitter {
 
     if (events) {
       if (doError && (events[errorMonitor] !== undefined)) {
-        promise = promise.then(this.emit(errorMonitor, ...args));
+        promise = promise.then(() => this.emit(errorMonitor, ...args));
       }
       doError = (doError && events.error === undefined);
     } else if (!doError) {
@@ -306,6 +306,7 @@ Object.defineProperties(EventEmitter, {
 
 EventEmitter.defaultResultFilter = undefined;
 EventEmitter.prototype.on = EventEmitter.prototype.addListener;
+EventEmitter.prototype.off = EventEmitter.prototype.removeListener;
 EventEmitter.prototype._resultFilter = undefined;
 
 
