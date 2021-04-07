@@ -1,5 +1,5 @@
 declare type TEventType = string | symbol;
-declare type TListener = (...args: any[]) => void;
+declare type TListener = (...args: any[]) => Promise<any>;
 declare type TFilter<T = any> = {
     <S extends T>(callbackfn: (value: T, index: number, array: T[]) => value is S, thisArg?: any): S[];
     (callbackfn: (value: T, index: number, array: T[]) => unknown, thisArg?: any): T[];
@@ -12,9 +12,9 @@ declare class EventEmitter {
     get maxListeners(): number;
     set maxListeners(n: number);
     getResultFilter(): TFilter | undefined;
-    setResultFilter(filter: TFilter): this;
+    setResultFilter(filter: TFilter | undefined): this;
     get resultFilter(): TFilter | undefined;
-    set resultFilter(filter: TFilter);
+    set resultFilter(filter: TFilter | undefined);
     emit(type: TEventType, ...args: any[]): Promise<any>;
     addListener(type: TEventType, listener: TListener): Promise<any>;
     prependListener(type: TEventType, listener: TListener): Promise<any>;
