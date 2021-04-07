@@ -12,9 +12,9 @@ declare class EventEmitter {
     get maxListeners(): number;
     set maxListeners(n: number);
     getResultFilter(): TFilter | undefined;
-    setResultFilter(filter: TFilter): this;
+    setResultFilter(filter: TFilter | undefined): this;
     get resultFilter(): TFilter | undefined;
-    set resultFilter(filter: TFilter);
+    set resultFilter(filter: TFilter | undefined);
     emit(type: TEventType, ...args: any[]): Promise<any>;
     addListener(type: TEventType, listener: TListener): Promise<any>;
     prependListener(type: TEventType, listener: TListener): Promise<any>;
