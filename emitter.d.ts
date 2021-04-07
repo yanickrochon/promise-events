@@ -1,5 +1,5 @@
 declare type TEventType = string | symbol;
-declare type TListener = (...args: any[]) => void;
+declare type TListener = (...args: any[]) => Promise<any>;
 declare type TFilter<T = any> = {
     <S extends T>(callbackfn: (value: T, index: number, array: T[]) => value is S, thisArg?: any): S[];
     (callbackfn: (value: T, index: number, array: T[]) => unknown, thisArg?: any): T[];
