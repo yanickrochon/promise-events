@@ -1,6 +1,6 @@
 {
   "name": "promise-events",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "description": "A promise-based events emitter",
   "author": "Yanick Rochon <yanick.rochon@gmail.com>",
   "keywords": [
