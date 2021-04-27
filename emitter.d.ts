@@ -18,7 +18,7 @@ declare class EventEmitter {
     emit(type: TEventType, ...args: any[]): Promise<any>;
     addListener(type: TEventType, listener: TListener): Promise<any>;
     prependListener(type: TEventType, listener: TListener): Promise<any>;
-    once(type: TEventType, listener: TListener): Promise<any>;
+    once(type: TEventType, listener?: TListener): Promise<any>;
     prependOnceListener(type: TEventType, listener: TListener): Promise<any>;
     removeListener(type: TEventType, listener: TListener): Promise<any>;
     removeAllListeners(type: string | symbol): Promise<any>;
