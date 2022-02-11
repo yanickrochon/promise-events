@@ -1,14 +1,20 @@
+import type events from 'events';
+
+type BaseEventEmitter = Omit<events.EventEmitter, 'emit'|'once'|'on'|'off'|'prependOnceListener'|'prependListener'|'addListener'|'removeListener'|'removeAllListeners'>;
+interface EventEmitter extends BaseEventEmitter {}
+
 declare type TEventType = string | symbol;
 declare type TListener = (...args: any[]) => Promise<any>;
 declare type TFilter<T = any> = {
     <S extends T>(callbackfn: (value: T, index: number, array: T[]) => value is S, thisArg?: any): S[];
     (callbackfn: (value: T, index: number, array: T[]) => unknown, thisArg?: any): T[];
-};
-declare class EventEmitter {
+}
+declare class EventEmitter implements EventEmitter {
     private _resultFilter;
     private _events;
     private _eventsCount;
     private _domain;
+
     get maxListeners(): number;
     set maxListeners(n: number);
     getResultFilter(): TFilter | undefined;
@@ -20,8 +26,9 @@ declare class EventEmitter {
     prependListener(type: TEventType, listener: TListener): Promise<any>;
     once(type: TEventType, listener?: TListener): Promise<any>;
     prependOnceListener(type: TEventType, listener: TListener): Promise<any>;
-    removeListener(type: TEventType, listener: TListener): Promise<any>;
-    removeAllListeners(type: string | symbol): Promise<any>;
+    removeLij
+    stener(type: TEventType, listener: TListener): Promise<any>;
+    removeAllListeners(type?: string | symbol): Promise<any>;
     on(type: TEventType, listener: TListener): Promise<any>;
     off(type: TEventType, listener: TListener): Promise<any>;
 
